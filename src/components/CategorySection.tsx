@@ -18,6 +18,8 @@ export default function CategorySection({ id, title, items, image, bgPosition = 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       aria-labelledby={`category-${id}`}
+      data-aos="fade-up"
+      data-aos-duration="1000"
     >
       <div className="absolute inset-0 before:absolute before:inset-0 before:bg-gradient-to-t before:from-black/60 before:via-transparent before:to-transparent before:pointer-events-none">
         <div
@@ -40,7 +42,12 @@ export default function CategorySection({ id, title, items, image, bgPosition = 
       </div>
 
       <div className="relative z-10 w-full max-w-screen-xl mx-auto px-6 sm:px-10 flex justify-end">
-        <div className="text-center max-w-md bg-black/20 backdrop-blur-sm p-8 rounded-lg">
+        <div 
+          className="text-center max-w-md bg-black/20 backdrop-blur-sm p-8 rounded-lg"
+          data-aos="fade-left"
+          data-aos-delay="200"
+          data-aos-duration="800"
+        >
           <h3
             id={`category-${id}`}
             className="font-serif text-3xl sm:text-4xl md:text-5xl text-yellow-600 tracking-[0.15em] mb-8"
@@ -49,13 +56,16 @@ export default function CategorySection({ id, title, items, image, bgPosition = 
           </h3>
 
           <ul className="flex flex-col gap-6 mb-10">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <li
                 key={item}
                 className="text-2xl sm:text-3xl text-white italic font-light transition-transform duration-300"
                 style={{
                   transform: isHovered ? 'translateX(10px)' : 'translateX(0)',
                 }}
+                data-aos="fade-up"
+                data-aos-delay={300 + (index * 100)}
+                data-aos-duration="600"
               >
                 {item}
               </li>
@@ -65,6 +75,8 @@ export default function CategorySection({ id, title, items, image, bgPosition = 
           <button
             className="inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-yellow-600 rounded-full p-2"
             aria-label={`View ${title} category`}
+            data-aos="zoom-in"
+            data-aos-delay="500"
           >
             <ChevronRight
               className="w-9 h-9 text-yellow-600 transition-transform duration-500"
