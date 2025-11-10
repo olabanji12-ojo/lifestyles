@@ -29,9 +29,12 @@ export default function Hero() {
           <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.12em] text-black mb-8 animate-fade-in-delay-2">
             BE INSPIRED
           </h2>
-          <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-yellow-600 mb-12 animate-fade-in-delay-3 italic font-light">
-            Live inspired every day
-          </p>
+<p
+  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-yellow-600 mb-12 animate-fade-in-delay-3 italic font-light"
+  style={{ fontFamily: 'Dancing Script, cursive' }}
+>
+  Live inspired every day
+</p>
           <button
             className="bg-black text-white px-12 py-4 text-xs tracking-[0.2em] hover:bg-yellow-700 hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-700 focus:ring-offset-2 shadow-lg animate-fade-in-delay-4"
             aria-label="Explore our collection"
