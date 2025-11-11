@@ -111,7 +111,7 @@ export default function Personalize() {
 
         {/* Title */}
         <div className="text-center mb-16" data-aos="fade-up">
-          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl tracking-[0.15em] text-white mb-4">
+          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl tracking-[0.15em] text-white mb-4">
             PERSONALIZE
           </h1>
           <p className="text-2xl text-yellow-600 italic font-light mb-6">

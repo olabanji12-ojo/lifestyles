@@ -48,3 +48,25 @@
     transform: translateY(0);
   }
 }
+
+
+/* Prevent horizontal scroll FOREVER */
+html, body, #root {
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Make all pages respect nav height */
+main, .page-container {
+  padding-top: 90px; /* height of your nav */
+}
+
+/* KILL HORIZONTAL SCROLL FOREVER */
+html, body, #root, .App {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
