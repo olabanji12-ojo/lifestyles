@@ -8,7 +8,7 @@ import Categories from './components/Categories';
 import Footer from './components/Footer';
 import Shop from './components/Shop';
 import Personalize from './components/Personalize'
-import BeInspired from './components/BeInspired'
+import Beinspired from './components/Beinspired'
 import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
@@ -49,7 +49,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/personalize" element={<Personalize />} />
-            <Route path="/inspired" element={<BeInspired />} />
+            <Route path="/inspired" element={<Beinspired />} />
             <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
