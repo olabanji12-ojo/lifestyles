@@ -9,6 +9,9 @@ import Footer from './components/Footer';
 import Shop from './components/Shop';
 import Personalize from './components/Personalize'
 import BeInspired from './components/BeInspired'
+import ProductDetail from './components/ProductDetail';
+import Cart from './components/Cart';
+import Checkout from './components/Checkout';
 
 // Home Page Component
 function HomePage() {
@@ -26,11 +29,12 @@ function App() {
   useEffect(() => {
     AOS.init({
       duration: 1000, // Animation duration in milliseconds
-      once: false, // Set to true if you want animation to happen only once
+      once: true, // Set to true if you want animation to happen only once
       mirror: false, // Whether elements should animate out while scrolling past them
       offset: 100, // Offset from the original trigger point
       easing: 'ease-in-out', // Easing function
     });
+    AOS.refresh();
   }, []);
 
   return (
@@ -46,6 +50,9 @@ function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/personalize" element={<Personalize />} />
             <Route path="/inspired" element={<BeInspired />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
 
           </Routes>
         </main>

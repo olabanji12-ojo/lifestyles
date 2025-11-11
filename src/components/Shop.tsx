@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Grid, List, X } from 'lucide-react';
 
 // Categories from homepage
@@ -84,7 +85,7 @@ export default function Shop() {
       <div className="max-w-screen-xl mx-auto px-6 sm:px-10 py-12">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-400 mb-8" aria-label="Breadcrumb">
-          <a href="/" className="hover:text-yellow-600 transition-colors">Home</a>
+          <Link to="/" className="hover:text-yellow-600 transition-colors">Home</Link>
           <span className="mx-2">/</span>
           <span className="text-white">Shop</span>
         </nav>
@@ -265,20 +266,33 @@ export default function Shop() {
                     </span>
                   )}
 
-                  {/* Image */}
-                  <div className="aspect-square bg-gray-800 overflow-hidden">
+                  {/* Clickable Image */}
+                  <Link to={`/product/${product.id}`} className="block aspect-square bg-gray-800 overflow-hidden">
                     <img
                       src={product.image}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                  </div>
+                  </Link>
 
                   {/* Info */}
                   <div className="p-4">
-                    <h3 className="text-white text-lg font-light mb-2">{product.name}</h3>
-                    <p className="text-yellow-600 text-xl font-bold">₦{product.price.toLocaleString()}</p>
-                    <button className="mt-4 w-full bg-yellow-600 text-black py-2 text-sm tracking-wider font-bold hover:bg-white transition-colors">
+                    <Link 
+                      to={`/product/${product.id}`}
+                      className="text-white text-lg font-light mb-2 block hover:text-yellow-600 transition-colors"
+                      style={{ fontFamily: 'Dancing Script, cursive' }}
+                    >
+                      {product.name}
+                    </Link>
+                    <p className="text-yellow-600 text-xl font-bold mb-4">₦{product.price.toLocaleString()}</p>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // TODO: Add to cart functionality
+                        alert(`Added ${product.name} to cart!`);
+                      }}
+                      className="w-full bg-yellow-600 text-black py-2 text-sm tracking-wider font-bold hover:bg-white transition-colors"
+                    >
                       ADD TO CART
                     </button>
                   </div>

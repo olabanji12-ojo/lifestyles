@@ -57,7 +57,7 @@ export default function CategorySection({
             {title}
           </h3>
 
-          {/* List – always visible */}
+          {/* Animated List */}
           <ul className="flex flex-col gap-6 mb-10">
             {items.map((item, index) => (
               <li
@@ -65,8 +65,10 @@ export default function CategorySection({
                 className="text-2xl sm:text-3xl text-white font-light"
                 style={{
                   fontFamily: 'Dancing Script, cursive',
-                  animation: `fadeIn 0.5s ease ${index * 50}ms both`,
                 }}
+                data-aos="fade-up"
+                data-aos-delay={150 * index}
+                data-aos-duration="800"
               >
                 {item}
               </li>
@@ -84,20 +86,6 @@ export default function CategorySection({
           </button>
         </div>
       </div>
-
-      {/* Quick keyframe for the staggered fade-in */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </article>
   );
 }

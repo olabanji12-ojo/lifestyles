@@ -1,4 +1,4 @@
-import { Search, User, FileText } from 'lucide-react';
+import { Search, User, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface NavigationProps {
@@ -56,12 +56,17 @@ export default function Navigation({ mobileMenuOpen, setMobileMenuOpen }: Naviga
             >
               <User className="w-5 h-5" />
             </button>
-            <button
-              className="p-2 hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-700 rounded"
-              aria-label="View orders"
+            <Link
+              to="/cart"
+              className="p-2 hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-700 rounded relative"
+              aria-label="Shopping cart"
             >
-              <FileText className="w-5 h-5" />
-            </button>
+              <ShoppingBag className="w-5 h-5" />
+              {/* Cart item count badge - uncomment when you have cart data */}
+              {/* <span className="absolute -top-1 -right-1 bg-yellow-600 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                3
+              </span> */}
+            </Link>
           </div>
 
           <button
