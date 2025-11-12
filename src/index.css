@@ -70,3 +70,37 @@ html, body, #root, .App {
   margin: 0 !important;
   padding: 0 !important;
 }
+
+/* Add to your global CSS or component */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Or if you want to be more specific */
+.min-h-screen {
+  overscroll-behavior: none;
+}
+
+/* Ensure smooth scrolling behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Make sure main content area handles all scrolling */
+main {
+  min-height: 100vh;
+}
+
+/* Remove any extra space from footer */
+footer {
+  margin-top: 0;
+}
+body, #root {
+  background-color: bg-gray-900/95;
+}

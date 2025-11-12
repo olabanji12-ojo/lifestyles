@@ -58,31 +58,25 @@ export default function Cart() {
 
   return (
     <>
-      {/* FIXED: FULL BLEED + NO HORIZONTAL SCROLL */}
-      <div className="min-h-screen bg-black pt-20">
-        {/* REMOVED max-w-screen-xl + mx-auto → NOW FULL WIDTH */}
+      <div className="min-h-screen bg-cream-50 pt-20">
         <div className="px-4 sm:px-6 lg:px-8 xl:px-10 py-12 max-w-7xl mx-auto">
           
           {/* Breadcrumb */}
-          <nav className="text-sm text-gray-400 mb-8 font-light">
+          <nav className="text-sm text-gray-500 mb-8 font-light">
             <Link to="/" className="hover:text-yellow-600">Home</Link>
             <span className="mx-2">/</span>
             <Link to="/shop" className="hover:text-yellow-600">Shop</Link>
             <span className="mx-2">/</span>
-            <span className="text-white">Cart</span>
+            <span className="text-gray-800 font-medium">Cart</span>
           </nav>
-
-          {/* <h1 className="text-4xl sm:text-5xl text-white font-light mb-12 text-center">
-            Your Cart
-          </h1> */}
 
           {cartItems.length === 0 ? (
             <div className="text-center py-16">
-              <ShoppingBag className="w-24 h-24 text-gray-600 mx-auto mb-6" />
-              <h2 className="text-2xl text-white mb-4">Your cart is empty</h2>
+              <ShoppingBag className="w-24 h-24 text-gray-400 mx-auto mb-6" />
+              <h2 className="text-2xl text-gray-800 mb-4">Your cart is empty</h2>
               <Link
                 to="/shop"
-                className="inline-block bg-yellow-600 text-black px-8 py-3 text-sm tracking-wider font-bold hover:bg-white transition-colors"
+                className="inline-block bg-yellow-600 text-white px-8 py-3 text-sm tracking-wider font-bold hover:bg-yellow-500 transition-colors"
               >
                 CONTINUE SHOPPING
               </Link>
@@ -94,7 +88,7 @@ export default function Cart() {
                 {cartItems.map((item, index) => (
                   <div
                     key={item.id}
-                    className="flex gap-4 sm:gap-6 bg-white/5 p-4 sm:p-6 rounded-lg"
+                    className="flex gap-4 sm:gap-6 bg-white shadow-md p-4 sm:p-6 rounded-lg"
                     data-aos="fade-up"
                     data-aos-delay={index * 100}
                   >
@@ -109,28 +103,28 @@ export default function Cart() {
                     <div className="flex-1 min-w-0">
                       <Link 
                         to={`/product/${item.id}`}
-                        className="text-white text-base sm:text-lg hover:text-yellow-600 line-clamp-2"
+                        className="text-gray-800 text-base sm:text-lg hover:text-yellow-600 line-clamp-2"
                         style={{ fontFamily: 'Dancing Script, cursive' }}
                       >
                         {item.name}
                       </Link>
-                      <p className="text-gray-400 text-sm mt-1">₦{item.price.toLocaleString()}</p>
+                      <p className="text-gray-500 text-sm mt-1">₦{item.price.toLocaleString()}</p>
 
                       <div className="flex items-center gap-2 mt-4">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="p-2 bg-white/10 rounded hover:bg-white/20"
+                          className="p-2 bg-gray-200 rounded hover:bg-gray-300"
                         >
-                          <Minus className="w-4 h-4" />
+                          <Minus className="w-4 h-4 text-gray-700" />
                         </button>
-                        <span className="text-white font-bold w-10 text-center">
+                        <span className="text-gray-800 font-bold w-10 text-center">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="p-2 bg-white/10 rounded hover:bg-white/20"
+                          className="p-2 bg-gray-200 rounded hover:bg-gray-300"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-4 h-4 text-gray-700" />
                         </button>
                         <button
                           onClick={() => removeItem(item.id)}
@@ -150,19 +144,19 @@ export default function Cart() {
                 ))}
               </div>
 
-              {/* Order Summary - Sticky on large screens */}
+              {/* Order Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-white/5 rounded-lg p-6 sticky top-24">
-                  <h2 className="text-2xl text-white font-semibold mb-6">Order Summary</h2>
+                <div className="bg-white shadow-md rounded-lg p-6 sticky top-24">
+                  <h2 className="text-2xl text-gray-800 font-semibold mb-6">Order Summary</h2>
                   
-                  <div className="space-y-3 text-gray-300">
+                  <div className="space-y-3 text-gray-600">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
                       <span>₦{subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span className={shipping === 0 ? 'text-green-400' : ''}>
+                      <span className={shipping === 0 ? 'text-green-500 font-semibold' : ''}>
                         {shipping === 0 ? 'Free' : `₦${shipping.toLocaleString()}`}
                       </span>
                     </div>
@@ -172,14 +166,14 @@ export default function Cart() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between text-white text-2xl font-bold my-6 pt-6 border-t border-gray-700">
+                  <div className="flex justify-between text-gray-800 text-2xl font-bold my-6 pt-6 border-t border-gray-200">
                     <span>Total</span>
                     <span className="text-yellow-600">₦{orderTotal.toLocaleString()}</span>
                   </div>
 
                   <button
                     onClick={() => navigate('/checkout')}
-                    className="w-full bg-yellow-600 text-black py-4 font-bold hover:bg-white transition-colors mb-4"
+                    className="w-full bg-yellow-600 text-white py-4 font-bold hover:bg-yellow-500 transition-colors mb-4"
                   >
                     PROCEED TO CHECKOUT
                   </button>
@@ -190,21 +184,21 @@ export default function Cart() {
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
                       placeholder="Promo code"
-                      className="w-full bg-white/10 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600 mb-2"
+                      className="w-full bg-gray-100 border border-gray-300 rounded px-4 py-3 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-yellow-600 mb-2"
                     />
                     <button
                       onClick={applyPromoCode}
-                      className="w-full border border-yellow-600 text-yellow-600 py-2 hover:bg-yellow-600 hover:text-black transition-colors"
+                      className="w-full border border-yellow-600 text-yellow-600 py-2 hover:bg-yellow-600 hover:text-white transition-colors"
                     >
                       APPLY
                     </button>
                   </div>
 
-                  <div className="mt-8 pt-6 border-t border-gray-700 text-center">
-                    <p className="text-gray-400 text-xs mb-3">We accept</p>
+                  <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p className="text-gray-500 text-xs mb-3">We accept</p>
                     <div className="flex justify-center gap-3">
                       {paymentMethods.map((m) => (
-                        <div key={m.name} className="w-12 h-8 bg-white/10 rounded flex items-center justify-center text-xs">
+                        <div key={m.name} className="w-12 h-8 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-700">
                           {m.logo}
                         </div>
                       ))}

@@ -26,7 +26,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-black text-white pt-24 pb-16 px-6" role="contentinfo">
+    <footer className="bg-black text-white pt-24 pb-16 px-6 mt-0" role="contentinfo">
       <div className="max-w-screen-lg mx-auto">
         <h2 
           className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-center mb-10"

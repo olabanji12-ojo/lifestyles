@@ -41,23 +41,18 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Calculate totals
-  const subtotal = mockOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = mockOrderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 1500;
   const orderTotal = subtotal + shipping;
 
   // Validation
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    
-    if (!contactInfo.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
 
-    if (!contactInfo.phone) {
-      newErrors.phone = 'Phone number is required';
-    }
+    if (!contactInfo.email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) newErrors.email = 'Please enter a valid email address';
+
+    if (!contactInfo.phone) newErrors.phone = 'Phone number is required';
 
     if (!shippingAddress.firstName) newErrors.firstName = 'First name is required';
     if (!shippingAddress.lastName) newErrors.lastName = 'Last name is required';
@@ -69,87 +64,65 @@ export default function Checkout() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle step progression
   const handleContinueToPayment = (e: FormEvent) => {
     e.preventDefault();
-    
-    if (validateStep1()) {
-      setCurrentStep(2);
-      // TODO: Save shipping info to Firebase
-    }
+    if (validateStep1()) setCurrentStep(2);
   };
 
-  // Handle payment (integrate Paystack here)
-  const handlePayment = async (e: FormEvent) => {
+  const handlePayment = (e: FormEvent) => {
     e.preventDefault();
     setCurrentStep(3);
 
-    // TODO: Paystack integration
-    // const paystackHandler = PaystackPop.setup({
-    //   key: 'YOUR_PAYSTACK_PUBLIC_KEY',
-    //   email: contactInfo.email,
-    //   amount: orderTotal * 100, // Amount in kobo
-    //   currency: 'NGN',
-    //   onSuccess: (transaction) => {
-    //     // Save order to Firebase
-    //     navigate('/order-confirmation', { state: { orderId: transaction.reference } });
-    //   },
-    //   onCancel: () => {
-    //     alert('Payment cancelled');
-    //   }
-    // });
-    // paystackHandler.openIframe();
-
-    // Mock success - Remove when integrating Paystack
+    // Mock success - replace with Paystack integration
     setTimeout(() => {
       navigate('/order-confirmation');
     }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-black pt-20">
+    <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-screen-xl mx-auto px-6 sm:px-10 py-12">
         {/* Header */}
         <div className="text-center mb-12" data-aos="fade-down">
           <Link to="/" className="inline-block mb-8">
-            <h1 className="font-serif text-3xl tracking-[0.2em] text-white">INSPIRE</h1>
+            <h1 className="font-serif text-3xl tracking-[0.2em] text-gray-900">INSPIRE</h1>
           </Link>
-          <h2 className="text-4xl sm:text-5xl text-white font-light mb-8">Checkout</h2>
+          <h2 className="text-4xl sm:text-5xl text-gray-900 font-light mb-8">Checkout</h2>
 
           {/* Progress Steps */}
           <div className="flex justify-center items-center gap-4 max-w-md mx-auto">
             {/* Step 1 */}
             <div className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 1 ? 'bg-yellow-600 text-black' : 'bg-white/5 text-gray-400'
+                currentStep >= 1 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-400'
               }`}>
                 {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
               </div>
-              <span className="text-xs text-gray-400">Shipping</span>
+              <span className="text-xs text-gray-500">Shipping</span>
             </div>
 
-            <div className={`h-0.5 w-16 ${currentStep >= 2 ? 'bg-yellow-600' : 'bg-gray-700'}`} />
+            <div className={`h-0.5 w-16 ${currentStep >= 2 ? 'bg-yellow-500' : 'bg-gray-300'}`} />
 
             {/* Step 2 */}
             <div className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 2 ? 'bg-yellow-600 text-black' : 'bg-white/5 text-gray-400'
+                currentStep >= 2 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-400'
               }`}>
                 {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
               </div>
-              <span className="text-xs text-gray-400">Payment</span>
+              <span className="text-xs text-gray-500">Payment</span>
             </div>
 
-            <div className={`h-0.5 w-16 ${currentStep >= 3 ? 'bg-yellow-600' : 'bg-gray-700'}`} />
+            <div className={`h-0.5 w-16 ${currentStep >= 3 ? 'bg-yellow-500' : 'bg-gray-300'}`} />
 
             {/* Step 3 */}
             <div className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 3 ? 'bg-yellow-600 text-black' : 'bg-white/5 text-gray-400'
+                currentStep >= 3 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-400'
               }`}>
                 3
               </div>
-              <span className="text-xs text-gray-400">Review</span>
+              <span className="text-xs text-gray-500">Review</span>
             </div>
           </div>
         </div>
@@ -160,16 +133,16 @@ export default function Checkout() {
             {currentStep === 1 && (
               <form onSubmit={handleContinueToPayment} className="space-y-8" data-aos="fade-right">
                 {/* Shipping Address */}
-                <div className="bg-white/5 rounded-lg p-6">
-                  <h3 className="text-white text-xl font-semibold mb-6">Shipping Address</h3>
-                  <p className="text-gray-400 text-sm mb-6">Enter your delivery details to proceed</p>
+                <div className="bg-white shadow-md rounded-lg p-6">
+                  <h3 className="text-gray-900 text-xl font-semibold mb-6">Shipping Address</h3>
+                  <p className="text-gray-500 text-sm mb-6">Enter your delivery details to proceed</p>
 
-                  {/* Contact Information */}
+                  {/* Contact Info */}
                   <div className="mb-6">
-                    <h4 className="text-white text-sm font-semibold mb-4">Contact Information</h4>
+                    <h4 className="text-gray-900 text-sm font-semibold mb-4">Contact Information</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="email" className="block text-gray-400 text-sm mb-2">
+                        <label htmlFor="email" className="block text-gray-700 text-sm mb-2">
                           Email Address *
                         </label>
                         <input
@@ -178,14 +151,12 @@ export default function Checkout() {
                           value={contactInfo.email}
                           onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
                           placeholder="invalid@example.com"
-                          className={`w-full bg-white/5 border ${errors.email ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                          className={`w-full bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                         />
-                        {errors.email && (
-                          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                        )}
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                       </div>
                       <div>
-                        <label htmlFor="phone" className="block text-gray-400 text-sm mb-2">
+                        <label htmlFor="phone" className="block text-gray-700 text-sm mb-2">
                           Phone Number *
                         </label>
                         <input
@@ -194,22 +165,20 @@ export default function Checkout() {
                           value={contactInfo.phone}
                           onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
                           placeholder="+1 (555) 123-4567"
-                          className={`w-full bg-white/5 border ${errors.phone ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                          className={`w-full bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                         />
-                        {errors.phone && (
-                          <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                        )}
+                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                       </div>
                     </div>
                   </div>
 
                   {/* Delivery Address */}
                   <div>
-                    <h4 className="text-white text-sm font-semibold mb-4">Delivery Address</h4>
+                    <h4 className="text-gray-900 text-sm font-semibold mb-4">Delivery Address</h4>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label htmlFor="firstName" className="block text-gray-400 text-sm mb-2">
+                          <label htmlFor="firstName" className="block text-gray-700 text-sm mb-2">
                             First Name *
                           </label>
                           <input
@@ -218,11 +187,11 @@ export default function Checkout() {
                             value={shippingAddress.firstName}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, firstName: e.target.value })}
                             placeholder="John"
-                            className={`w-full bg-white/5 border ${errors.firstName ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                            className={`w-full bg-white border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                           />
                         </div>
                         <div>
-                          <label htmlFor="lastName" className="block text-gray-400 text-sm mb-2">
+                          <label htmlFor="lastName" className="block text-gray-700 text-sm mb-2">
                             Last Name *
                           </label>
                           <input
@@ -231,13 +200,13 @@ export default function Checkout() {
                             value={shippingAddress.lastName}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, lastName: e.target.value })}
                             placeholder="Doe"
-                            className={`w-full bg-white/5 border ${errors.lastName ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                            className={`w-full bg-white border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label htmlFor="streetAddress" className="block text-gray-400 text-sm mb-2">
+                        <label htmlFor="streetAddress" className="block text-gray-700 text-sm mb-2">
                           Street Address *
                         </label>
                         <input
@@ -246,13 +215,13 @@ export default function Checkout() {
                           value={shippingAddress.streetAddress}
                           onChange={(e) => setShippingAddress({ ...shippingAddress, streetAddress: e.target.value })}
                           placeholder="789 Maple Avenue"
-                          className={`w-full bg-white/5 border ${errors.streetAddress ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                          className={`w-full bg-white border ${errors.streetAddress ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                         />
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                          <label htmlFor="city" className="block text-gray-400 text-sm mb-2">
+                          <label htmlFor="city" className="block text-gray-700 text-sm mb-2">
                             City *
                           </label>
                           <input
@@ -261,11 +230,11 @@ export default function Checkout() {
                             value={shippingAddress.city}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
                             placeholder="Fairview"
-                            className={`w-full bg-white/5 border ${errors.city ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                            className={`w-full bg-white border ${errors.city ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                           />
                         </div>
                         <div>
-                          <label htmlFor="state" className="block text-gray-400 text-sm mb-2">
+                          <label htmlFor="state" className="block text-gray-700 text-sm mb-2">
                             State / Province *
                           </label>
                           <input
@@ -274,11 +243,11 @@ export default function Checkout() {
                             value={shippingAddress.state}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
                             placeholder="California"
-                            className={`w-full bg-white/5 border ${errors.state ? 'border-red-500' : 'border-gray-700'} rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600`}
+                            className={`w-full bg-white border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
                           />
                         </div>
                         <div>
-                          <label htmlFor="postalCode" className="block text-gray-400 text-sm mb-2">
+                          <label htmlFor="postalCode" className="block text-gray-700 text-sm mb-2">
                             Postal Code
                           </label>
                           <input
@@ -287,109 +256,106 @@ export default function Checkout() {
                             value={shippingAddress.postalCode}
                             onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
                             placeholder="90210"
-                            className="w-full bg-white/5 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-600"
+                            className="w-full bg-white border border-gray-300 rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                           />
                         </div>
                       </div>
 
-                      <label className="flex items-center gap-3 cursor-pointer">
+                      <label className="flex items-center gap-3 cursor-pointer mt-2">
                         <input
                           type="checkbox"
                           checked={saveAddress}
                           onChange={(e) => setSaveAddress(e.target.checked)}
-                          className="w-4 h-4 rounded border-gray-600 bg-transparent checked:bg-yellow-600 checked:border-yellow-600 focus:ring-yellow-600 focus:ring-offset-black cursor-pointer"
+                          className="w-4 h-4 rounded border-gray-400 bg-white checked:bg-yellow-500 checked:border-yellow-500 focus:ring-yellow-500 cursor-pointer"
                         />
-                        <span className="text-gray-400 text-sm">Save this address for future purchases</span>
+                        <span className="text-gray-600 text-sm">Save this address for future purchases</span>
                       </label>
                     </div>
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  className="w-full bg-yellow-600 text-black py-4 text-sm tracking-wider font-bold hover:bg-white transition-colors flex items-center justify-center gap-2"
-                >
-                  CONTINUE TO PAYMENT
-                  <span>→</span>
-                </button>
+                  <button
+                    type="submit"
+                    className="w-full bg-yellow-500 text-white py-4 text-sm tracking-wider font-bold hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 mt-4"
+                  >
+                    CONTINUE TO PAYMENT
+                    <span>→</span>
+                  </button>
+                </div>
               </form>
             )}
 
+            {/* Payment Step */}
             {currentStep === 2 && (
               <div className="space-y-8" data-aos="fade-right">
-                <div className="bg-white/5 rounded-lg p-6">
-                  <h3 className="text-white text-xl font-semibold mb-6">Payment Method</h3>
-                  <p className="text-gray-400 mb-6">
+                <div className="bg-white shadow-md rounded-lg p-6">
+                  <h3 className="text-gray-900 text-xl font-semibold mb-6">Payment Method</h3>
+                  <p className="text-gray-500 mb-6">
                     Complete your purchase securely with Paystack
                   </p>
-                  
+
                   <button
                     onClick={handlePayment}
-                    className="w-full bg-yellow-600 text-black py-4 text-sm tracking-wider font-bold hover:bg-white transition-colors"
+                    className="w-full bg-yellow-500 text-white py-4 text-sm tracking-wider font-bold hover:bg-yellow-400 transition-colors"
                   >
                     PAY ₦{orderTotal.toLocaleString()}
                   </button>
 
-                  <p className="text-gray-500 text-xs text-center mt-4">
+                  <p className="text-gray-400 text-xs text-center mt-4">
                     Secure payment powered by Paystack
                   </p>
                 </div>
               </div>
             )}
 
+            {/* Processing Step */}
             {currentStep === 3 && (
               <div className="text-center py-12" data-aos="zoom-in">
-                <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Check className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-3xl text-white mb-4">Processing Payment...</h3>
-                <p className="text-gray-400">Please wait while we confirm your order</p>
+                <h3 className="text-3xl text-gray-900 mb-4">Processing Payment...</h3>
+                <p className="text-gray-500">Please wait while we confirm your order</p>
               </div>
             )}
           </div>
 
           {/* Right: Order Summary */}
           <div className="lg:col-span-1" data-aos="fade-left">
-            <div className="bg-white/5 rounded-lg p-6 sticky top-24">
-              <h3 className="text-white text-xl font-semibold mb-6">Order Summary</h3>
+            <div className="bg-white shadow-md rounded-lg p-6 sticky top-24">
+              <h3 className="text-gray-900 text-xl font-semibold mb-6">Order Summary</h3>
 
-              {/* Order Items */}
               <div className="space-y-4 mb-6">
                 {mockOrderItems.map((item) => (
                   <div key={item.id} className="flex gap-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
+                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
                     <div className="flex-1">
-                      <p 
-                        className="text-white text-sm mb-1"
+                      <p
+                        className="text-gray-900 text-sm mb-1"
                         style={{ fontFamily: 'Dancing Script, cursive' }}
                       >
                         {item.name}
                       </p>
-                      <p className="text-gray-400 text-xs">Qty: {item.quantity}</p>
+                      <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
                     </div>
-                    <p className="text-white font-semibold">
+                    <p className="text-gray-900 font-semibold">
                       ₦{(item.price * item.quantity).toLocaleString()}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-gray-700 pt-4 space-y-3">
-                <div className="flex justify-between text-gray-300">
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span>₦{subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-gray-300">
+                <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
                   <span>₦{shipping.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-white text-xl font-bold pt-3 border-t border-gray-700">
+                <div className="flex justify-between text-gray-900 text-xl font-bold pt-3 border-t border-gray-200">
                   <span>Order Total</span>
-                  <span className="text-yellow-600">₦{orderTotal.toLocaleString()}</span>
+                  <span className="text-yellow-500">₦{orderTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>

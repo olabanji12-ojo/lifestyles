@@ -12,6 +12,13 @@ import Beinspired from './components/Beinspired'
 import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard'
+import AdminProducts from './components/AdminProducts'
+import AdminOrders from './components/AdminOrders'
+import AdminRequests from './components/AdminRequests'
+
+
 
 // Home Page Component
 function HomePage() {
@@ -28,34 +35,45 @@ function App() {
 
   useEffect(() => {
     AOS.init({
-      duration: 1000, // Animation duration in milliseconds
-      once: true, // Set to true if you want animation to happen only once
-      mirror: false, // Whether elements should animate out while scrolling past them
-      offset: 100, // Offset from the original trigger point
-      easing: 'ease-in-out', // Easing function
+      duration: 1000,
+      once: true,
+      mirror: false,
+      offset: 0,
+      easing: 'ease-in-out',
     });
     AOS.refresh();
   }, []);
 
   return (
     <Router>
-      <div className="min-h-screen bg-black">
+      {/* Remove flex and min-h-screen from parent, use simple structure */}
+      <div className="relative">
         <Navigation
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
         />
-        <main>
+        
+        {/* Main content area - this should control the scrolling */}
+        <main className="min-h-screen">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/personalize" element={<Personalize />} />
             <Route path="/inspired" element={<Beinspired />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/adminproducts" element={<AdminProducts />} />
+            <Route path="/adminorders" element={<AdminOrders />} />
+            <Route path="/adminrequests" element={<AdminRequests />} />
+
 
           </Routes>
         </main>
+        
+        {/* Footer will naturally follow the content */}
         <Footer />
       </div>
     </Router>
