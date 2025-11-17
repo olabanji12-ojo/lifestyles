@@ -97,14 +97,10 @@ export default function Checkout() {
   };
 
   // Handle Paystack Payment
-  const handlePayment = async (e: FormEvent) => {
+  // Key section to update in your Checkout.tsx
+
+const handlePayment = async (e: FormEvent) => {
   e.preventDefault();
-
-  // ✅ FORCE FRESH STATE
-  setProcessingPayment(false); // Reset any stuck state
-  setLoading(false);
-
-  console.log('🔄 Starting NEW payment attempt at', new Date().toISOString());
 
   if (!Paystack) {
     toast.error('Payment system not loaded. Please refresh and try again.');
@@ -121,14 +117,13 @@ export default function Checkout() {
   setLoading(true);
 
   try {
-    console.log('📞 Calling backend to initialize payment...');
+    console.log('📞 Calling backend to prepare order...');
     
-    // ✅ ADD CACHE-BUSTING HEADER
+    // Step 1: Call YOUR backend to prepare order (NOT Paystack yet!)
     const initRes = await fetch('/api/initializePaystack', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache', // ← Prevent caching
       },
       body: JSON.stringify({
         uid: currentUser.uid,
@@ -138,120 +133,95 @@ export default function Checkout() {
           fullName: `${formData.firstName} ${formData.lastName}`,
           phone: formData.phone,
         },
-        // ✅ Force uniqueness with timestamp
-        _t: Date.now(),
       }),
     });
 
-      if (!initRes.ok) {
-        const errorData = await initRes.json();
-        throw new Error(errorData.error || 'Failed to initialize payment');
-      }
-
-      const { authorization_url, reference, orderId } = await initRes.json();
-
-      console.log('✅ Payment initialized:', reference);
-
-      // Step 2: Open Paystack popup
-      const paystack = new Paystack();
-      
-      paystack.checkout({
-        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-        email: formData.email,
-        amount: orderTotal * 100, // Convert to kobo
-        currency: 'NGN',
-        ref: reference,
-        
-        onSuccess: async (transaction: any) => {
-          console.log('✅ Payment successful:', transaction.reference);
-          setCurrentStep(3);
-
-          try {
-            // Step 3: Verify payment with backend
-            const verifyRes = await fetch('/api/verifyPaystack', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                reference: transaction.reference,
-                uid: currentUser.uid,
-              }),
-            });
-
-            const { authorization_url, reference, orderId } = await initRes.json();
-
-          // ✅ ADD THESE DEBUG LOGS:
-          console.log('🔍 BACKEND RESPONSE:', {
-            reference,
-            orderId,
-            authorization_url,
-            timestamp: new Date().toISOString()
-          });
-
-          console.log('🔍 ABOUT TO CALL PAYSTACK WITH:', {
-            key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY?.substring(0, 10) + '...',
-            email: formData.email,
-            amount: orderTotal * 100,
-            ref: reference
-          });
-
-            const verifyData = await verifyRes.json();
-
-            if (verifyData.verified) {
-              console.log('✅ Payment verified');
-              
-              // Clear cart
-              await clearCart();
-
-              // Redirect to success page
-              setTimeout(() => {
-                navigate('/order-confirmation', {
-                  state: {
-                    reference: transaction.reference,
-                    orderId: verifyData.orderId,
-                    amount: orderTotal,
-                  },
-                });
-              }, 1500);
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('❌ Verification error:', error);
-            toast.error('Payment verification failed. Please contact support.');
-            navigate('/payment-failed', {
-              state: { reference: transaction.reference },
-            });
-          }
-        },
-
-        onCancel: () => {
-          console.log('⚠️ Payment cancelled by user');
-          setProcessingPayment(false);
-          setLoading(false);
-          toast.error('Payment cancelled');
-          navigate('/payment-failed', {
-            state: { reason: 'Payment cancelled' },
-          });
-        },
-
-        onError: (error: any) => {
-          console.error('❌ Payment error:', error);
-          setProcessingPayment(false);
-          setLoading(false);
-          toast.error('Payment failed. Please try again.');
-          navigate('/payment-failed', {
-            state: { reason: 'Payment error', details: error.message },
-          });
-        },
-      });
-
-    } catch (error: any) {
-      console.error('❌ Checkout error:', error);
-      toast.error(error.message || 'Failed to process payment');
-      setProcessingPayment(false);
-      setLoading(false);
+    if (!initRes.ok) {
+      const errorData = await initRes.json();
+      throw new Error(errorData.error || 'Failed to prepare order');
     }
-  };
+
+    const { reference, orderId, amount, email } = await initRes.json();
+
+    console.log('✅ Order prepared:', { reference, orderId, amount });
+
+    // Step 2: Open Paystack popup (THIS is where Paystack transaction is created)
+    const paystack = new Paystack();
+    
+    paystack.newTransaction({
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      email: email,
+      amount: amount, // Already in kobo from backend
+      currency: 'NGN',
+      ref: reference,
+      
+      onSuccess: async (transaction: any) => {
+        console.log('✅ Payment successful:', transaction.reference);
+        setCurrentStep(3);
+
+        try {
+          // Step 3: Verify payment with YOUR backend
+          const verifyRes = await fetch('/api/verifyPaystack', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reference: transaction.reference,
+              uid: currentUser.uid,
+            }),
+          });
+
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.verified) {
+            console.log('✅ Payment verified');
+            await clearCart();
+            
+            setTimeout(() => {
+              navigate('/order-confirmation', {
+                state: {
+                  reference: transaction.reference,
+                  orderId: verifyData.orderId,
+                  amount: amount / 100, // Convert back to Naira for display
+                },
+              });
+            }, 1500);
+          } else {
+            throw new Error('Payment verification failed');
+          }
+        } catch (error) {
+          console.error('❌ Verification error:', error);
+          toast.error('Payment verification failed. Please contact support.');
+          navigate('/payment-failed', {
+            state: { reference: transaction.reference },
+          });
+        } finally {
+          setProcessingPayment(false);
+          setLoading(false);
+        }
+      },
+
+      onCancel: () => {
+        console.log('⚠️ Payment cancelled by user');
+        setProcessingPayment(false);
+        setLoading(false);
+        toast.error('Payment cancelled');
+      },
+
+      onError: (error: any) => {
+        console.error('❌ Payment error:', error);
+        setProcessingPayment(false);
+        setLoading(false);
+        toast.error('Payment failed. Please try again.');
+      },
+    });
+
+  } catch (error: any) {
+    console.error('❌ Checkout error:', error);
+    toast.error(error.message || 'Failed to process payment');
+    setProcessingPayment(false);
+    setLoading(false);
+  }
+};
 
   // Get item price (handle variants)
   const getItemPrice = (item: any) => {
