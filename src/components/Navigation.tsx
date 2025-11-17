@@ -1,8 +1,9 @@
 // src/components/Navigation.tsx
 import { Search, User, ShoppingBag, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { handleLogout } from '../utils/authHelpers';
 
 interface NavigationProps {
   mobileMenuOpen: boolean;
@@ -14,70 +15,66 @@ const navLinks = [
   { label: 'PERSONALISE', href: '/personalize' },
   { label: 'BE INSPIRED', href: '/inspired' },
   { label: 'ABOUT US', href: '/about' },
+  { label: 'LOGOUT' },
 ];
 
-export default function Navigation({ 
-  mobileMenuOpen, 
-  setMobileMenuOpen,
-}: NavigationProps) {
-  const { cartCount } = useCart(); // Get cart count from context
+export default function Navigation({ mobileMenuOpen, setMobileMenuOpen }: NavigationProps) {
+  const { cartCount } = useCart();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
-      {/* MAIN NAV - FULLY MOBILE FIXED */}
+      {/* MAIN NAV */}
       <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md z-50 border-b border-black/5">
         <div className="px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
-          {/* LOGO */}
-          <Link
-            to="/"
-            className="font-serif text-2xl tracking-[0.2em] text-gray-900 hover:text-yellow-700 transition-colors flex-shrink-0"
-          >
+          <Link to="/" className="font-serif text-2xl tracking-[0.2em] text-gray-900 hover:text-yellow-700 transition-colors flex-shrink-0">
             INSPIRE
           </Link>
 
-          {/* DESKTOP LINKS */}
+          {/* Desktop Links */}
           <ul className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => (
               <li key={link.label}>
-                <Link
-                  to={link.href}
-                  className="text-xs tracking-[0.15em] text-gray-900 hover:text-yellow-700 transition-colors font-medium"
-                >
-                  {link.label}
-                </Link>
+                {link.label === 'LOGOUT' ? (
+                  currentUser && (
+                    <button
+                      onClick={() => handleLogout(navigate)}
+                      className="text-xs tracking-[0.15em] text-gray-900 hover:text-yellow-700 transition font-medium"
+                    >
+                      {link.label}
+                    </button>
+                  )
+                ) : (
+                  <Link
+                    to={link.href!}
+                    className="text-xs tracking-[0.15em] text-gray-900 hover:text-yellow-700 transition font-medium"
+                  >
+                    {link.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
 
-          {/* ICONS + HAMBURGER */}
+          {/* Icons + Hamburger */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-4">
               <button aria-label="Search" className="p-2 hover:text-yellow-700">
                 <Search className="w-5 h-5" />
               </button>
-              
-              {/* Account Icon - Link to login or profile */}
+
               {currentUser ? (
-                <Link 
-                  to="/profile" 
-                  aria-label="Profile" 
-                  className="p-2 hover:text-yellow-700"
-                >
+                <Link to="/profile" aria-label="Profile" className="p-2 hover:text-yellow-700">
                   <User className="w-5 h-5" />
                 </Link>
               ) : (
-                <Link 
-                  to="/login" 
-                  aria-label="Login" 
-                  className="p-2 hover:text-yellow-700"
-                >
+                <Link to="/login" aria-label="Login" className="p-2 hover:text-yellow-700">
                   <User className="w-5 h-5" />
                 </Link>
               )}
             </div>
 
-            {/* Cart Icon with Count */}
             <Link
               to="/cart"
               aria-label={`Cart (${cartCount})`}
@@ -91,7 +88,6 @@ export default function Navigation({
               )}
             </Link>
 
-            {/* MOBILE MENU TOGGLE */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
@@ -103,30 +99,37 @@ export default function Navigation({
         </div>
       </nav>
 
-      {/* MOBILE MENU BACKDROP + MENU */}
+      {/* Mobile Menu */}
       <div
         className={`fixed inset-0 z-40 flex items-center justify-center transition-all duration-500 lg:hidden ${
           mobileMenuOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'
         }`}
       >
-        {/* BACKDROP */}
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="absolute inset-0 bg-[#F5F1E7]/90 backdrop-blur-md"
-        />
+        <div onClick={() => setMobileMenuOpen(false)} className="absolute inset-0 bg-[#F5F1E7]/90 backdrop-blur-md" />
 
-        {/* MENU CONTENT */}
         <div className="relative flex flex-col items-center gap-8 px-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              to={link.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-gray-900 hover:text-yellow-500 transition-colors text-center"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.label === 'LOGOUT' ? (
+              currentUser && (
+                <button
+                  key={link.label}
+                  onClick={() => { handleLogout(navigate); setMobileMenuOpen(false); }}
+                  className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-gray-900 hover:text-yellow-500 transition-colors text-center"
+                >
+                  {link.label}
+                </button>
+              )
+            ) : (
+              <Link
+                key={link.label}
+                to={link.href!}
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-gray-900 hover:text-yellow-500 transition-colors text-center"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
       </div>
     </>
