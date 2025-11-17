@@ -16,7 +16,6 @@ function json(res, status, body) {
 }
 
 export default async function handler(req, res) {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return json(res, 200, { ok: true });
   }
@@ -44,6 +43,27 @@ export default async function handler(req, res) {
 
     const { db } = getAdmin();
 
+    // ✅ STEP 0: Cancel any pending orders for this user
+    console.log('🔍 Checking for existing pending orders...');
+    const existingOrders = await db.collection('orders')
+      .where('customerId', '==', uid)
+      .where('status', '==', 'Pending')
+      .get();
+
+    if (!existingOrders.empty) {
+      console.log(`⚠️ Found ${existingOrders.size} pending orders. Marking as abandoned...`);
+      const batch = db.batch();
+      existingOrders.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          status: 'Abandoned',
+          updatedAt: new Date(),
+          abandonedReason: 'User started new checkout session',
+        });
+      });
+      await batch.commit();
+      console.log('✅ Old pending orders marked as abandoned');
+    }
+
     // Step 1: Load cart from Firestore
     const cartDoc = await db.collection('carts').doc(uid).get();
     
@@ -64,12 +84,17 @@ export default async function handler(req, res) {
       return sum + (itemPrice * item.quantity);
     }, 0);
 
-    const amountKobo = Math.round(amountNaira * 100); // Convert to kobo
+    const amountKobo = Math.round(amountNaira * 100);
 
     console.log('💰 Total amount:', amountNaira, 'NGN (', amountKobo, 'kobo)');
 
-    // Step 3: Create order reference
-    const reference = `inspire_${uid.slice(0, 8)}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    // ✅ Step 3: Create GUARANTEED UNIQUE reference
+    const timestamp = Date.now();
+    const randomHex = crypto.randomBytes(8).toString('hex'); // 16 chars
+    const randomAlpha = Math.random().toString(36).substring(2, 9); // 7 chars
+    const reference = `inspire_${uid.slice(0, 8)}_${timestamp}_${randomHex}_${randomAlpha}`;
+
+    console.log('🆔 Generated unique reference:', reference);
 
     // Step 4: Create pending order in Firestore
     const orderRef = db.collection('orders').doc();
@@ -87,12 +112,14 @@ export default async function handler(req, res) {
         quantity,
         price: variant ? variant.price : price,
         variant: variant ? { size: variant.size, price: variant.price } : null,
+        image: image || '',
       })),
       total: amountNaira,
       status: 'Pending',
       shippingAddress: shippingAddress || '',
       paymentRef: reference,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     await orderRef.set(orderData);
@@ -114,7 +141,18 @@ export default async function handler(req, res) {
         metadata: { 
           orderId, 
           uid,
-          cancel_action: `${FRONTEND_BASE_URL}/payment-failed`
+          custom_fields: [
+            {
+              display_name: "Customer Name",
+              variable_name: "customer_name",
+              value: customerInfo?.fullName || 'N/A'
+            },
+            {
+              display_name: "Phone",
+              variable_name: "customer_phone",
+              value: customerInfo?.phone || 'N/A'
+            }
+          ]
         },
       }),
     });
@@ -123,13 +161,16 @@ export default async function handler(req, res) {
 
     if (!initRes.ok || !initJson.status) {
       console.error('❌ Paystack init failed:', initJson);
-      await orderRef.update({ status: 'Failed', failureReason: initJson?.message || 'init failed' });
+      await orderRef.update({ 
+        status: 'Failed', 
+        failureReason: initJson?.message || 'init failed',
+        updatedAt: new Date(),
+      });
       return json(res, 502, { error: 'Paystack initialization failed', details: initJson });
     }
 
-    console.log('✅ Paystack initialized:', reference);
+    console.log('✅ Paystack initialized with reference:', reference);
 
-    // Return authorization URL to frontend
     return json(res, 200, { 
       authorization_url: initJson.data.authorization_url, 
       reference, 
