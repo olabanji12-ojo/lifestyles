@@ -1,11 +1,13 @@
 // api/initializePaystack.js
+
 import crypto from 'node:crypto';
 import { getAdmin } from './_firebaseAdmin.js';
 
 export const config = {
-  runtime: "nodejs",
+  runtime: 'nodejs',
 };
 
+// Helper JSON response
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
@@ -16,6 +18,7 @@ function json(res, status, body) {
 }
 
 export default async function handler(req, res) {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return json(res, 200, { ok: true });
   }
@@ -24,8 +27,9 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed' });
   }
 
-  const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-  const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
+  const { PAYSTACK_SECRET_KEY } = process.env;
+  const FRONTEND_BASE_URL =
+    process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
 
   if (!PAYSTACK_SECRET_KEY) {
     console.error('❌ Missing PAYSTACK_SECRET_KEY');
@@ -33,40 +37,54 @@ export default async function handler(req, res) {
   }
 
   try {
+    // ---------------------------------------------------------
+    // Step 1: Validate incoming data
+    // ---------------------------------------------------------
     const { uid, email, shippingAddress, customerInfo } = req.body || {};
 
     if (!uid || !email) {
       return json(res, 400, { error: 'Missing uid or email' });
     }
 
-    console.log('📦 Initializing payment for user:', uid);
+    console.log(`📦 Starting Paystack init for user: ${uid}`);
 
     const { db } = getAdmin();
 
-    // ✅ STEP 0: Cancel any pending orders for this user
+    // ---------------------------------------------------------
+    // Step 2: Cancel existing pending orders
+    // ---------------------------------------------------------
     console.log('🔍 Checking for existing pending orders...');
-    const existingOrders = await db.collection('orders')
+
+    const existingOrders = await db
+      .collection('orders')
       .where('customerId', '==', uid)
       .where('status', '==', 'Pending')
       .get();
 
     if (!existingOrders.empty) {
-      console.log(`⚠️ Found ${existingOrders.size} pending orders. Marking as abandoned...`);
+      console.log(
+        `⚠️ Found ${existingOrders.size} pending orders → marking as abandoned`
+      );
+
       const batch = db.batch();
-      existingOrders.docs.forEach(doc => {
+
+      existingOrders.docs.forEach((doc) => {
         batch.update(doc.ref, {
           status: 'Abandoned',
           updatedAt: new Date(),
-          abandonedReason: 'User started new checkout session',
+          abandonedReason: 'User started a new checkout session',
         });
       });
+
       await batch.commit();
       console.log('✅ Old pending orders marked as abandoned');
     }
 
-    // Step 1: Load cart from Firestore
+    // ---------------------------------------------------------
+    // Step 3: Load cart
+    // ---------------------------------------------------------
     const cartDoc = await db.collection('carts').doc(uid).get();
-    
+
     if (!cartDoc.exists) {
       return json(res, 400, { error: 'Cart is empty or not found' });
     }
@@ -78,26 +96,30 @@ export default async function handler(req, res) {
       return json(res, 400, { error: 'Cart is empty' });
     }
 
-    // Step 2: Calculate total amount
+    // ---------------------------------------------------------
+    // Step 4: Calculate total amount (Naira → Kobo)
+    // ---------------------------------------------------------
     const amountNaira = items.reduce((sum, item) => {
-      const itemPrice = item.variant ? item.variant.price : item.price;
-      return sum + (itemPrice * item.quantity);
+      const price = item.variant ? item.variant.price : item.price;
+      return sum + price * item.quantity;
     }, 0);
 
     const amountKobo = Math.round(amountNaira * 100);
 
-    console.log('💰 Total amount:', amountNaira, 'NGN (', amountKobo, 'kobo)');
+    console.log(
+      `💰 Total amount: ₦${amountNaira} → ${amountKobo} kobo`
+    );
 
-    // ✅ Step 3: Create GUARANTEED UNIQUE reference
-    const timestamp = Date.now();
-    const randomHex = crypto.randomBytes(8).toString('hex'); // 16 chars
-    const randomAlpha = Math.random().toString(36).substring(2, 9); // 7 chars
+    // ---------------------------------------------------------
+    // Step 5: Create unique reference
+    // ---------------------------------------------------------
     const reference = `inspire_${crypto.randomUUID()}`;
 
+    console.log('🆔 Generated Paystack reference:', reference);
 
-    console.log('🆔 Generated unique reference:', reference);
-
-    // Step 4: Create pending order in Firestore
+    // ---------------------------------------------------------
+    // Step 6: Create order document
+    // ---------------------------------------------------------
     const orderRef = db.collection('orders').doc();
     const orderId = orderRef.id;
 
@@ -107,14 +129,18 @@ export default async function handler(req, res) {
       customerName: customerInfo?.fullName || '',
       customerEmail: email,
       customerPhone: customerInfo?.phone || '',
-      items: items.map(({ productId, name, price, quantity, variant, image }) => ({
-        productId,
-        productName: name,
-        quantity,
-        price: variant ? variant.price : price,
-        variant: variant ? { size: variant.size, price: variant.price } : null,
-        image: image || '',
-      })),
+      items: items.map(
+        ({ productId, name, price, quantity, variant, image }) => ({
+          productId,
+          productName: name,
+          quantity,
+          price: variant ? variant.price : price,
+          variant: variant
+            ? { size: variant.size, price: variant.price }
+            : null,
+          image: image || '',
+        })
+      ),
       total: amountNaira,
       status: 'Pending',
       shippingAddress: shippingAddress || '',
@@ -124,62 +150,75 @@ export default async function handler(req, res) {
     };
 
     await orderRef.set(orderData);
+
     console.log('✅ Order created:', orderId);
 
-    // Step 5: Initialize Paystack transaction
-    const initRes = await fetch('https://api.paystack.co/transaction/initialize', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        amount: amountKobo,
-        currency: 'NGN',
-        reference,
-        callback_url: `${FRONTEND_BASE_URL}/order-confirmation?ref=${reference}&oid=${orderId}`,
-        metadata: { 
-          orderId, 
-          uid,
-          custom_fields: [
-            {
-              display_name: "Customer Name",
-              variable_name: "customer_name",
-              value: customerInfo?.fullName || 'N/A'
-            },
-            {
-              display_name: "Phone",
-              variable_name: "customer_phone",
-              value: customerInfo?.phone || 'N/A'
-            }
-          ]
+    // ---------------------------------------------------------
+    // Step 7: Initialize Paystack transaction
+    // ---------------------------------------------------------
+    const initRes = await fetch(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
         },
-      }),
-    });
+        body: JSON.stringify({
+          email,
+          amount: amountKobo,
+          currency: 'NGN',
+          reference,
+          callback_url: `${FRONTEND_BASE_URL}/order-confirmation?ref=${reference}&oid=${orderId}`,
+          metadata: {
+            orderId,
+            uid,
+            custom_fields: [
+              {
+                display_name: 'Customer Name',
+                variable_name: 'customer_name',
+                value: customerInfo?.fullName || 'N/A',
+              },
+              {
+                display_name: 'Phone',
+                variable_name: 'customer_phone',
+                value: customerInfo?.phone || 'N/A',
+              },
+            ],
+          },
+        }),
+      }
+    );
 
     const initJson = await initRes.json();
 
     if (!initRes.ok || !initJson.status) {
       console.error('❌ Paystack init failed:', initJson);
-      await orderRef.update({ 
-        status: 'Failed', 
-        failureReason: initJson?.message || 'init failed',
+
+      await orderRef.update({
+        status: 'Failed',
+        failureReason: initJson?.message || 'Initialization failed',
         updatedAt: new Date(),
       });
-      return json(res, 502, { error: 'Paystack initialization failed', details: initJson });
+
+      return json(res, 502, {
+        error: 'Paystack initialization failed',
+        details: initJson,
+      });
     }
 
     console.log('✅ Paystack initialized with reference:', reference);
 
-    return json(res, 200, { 
-      authorization_url: initJson.data.authorization_url, 
-      reference, 
-      orderId 
+    return json(res, 200, {
+      authorization_url: initJson.data.authorization_url,
+      reference,
+      orderId,
     });
-
   } catch (error) {
-    console.error('❌ Initialize error:', error);
-    return json(res, 500, { error: 'Server error', details: error.message });
+    console.error('❌ Server error:', error);
+    return json(res, 500, {
+      error: 'Server error',
+      details: error.message,
+    });
   }
 }
