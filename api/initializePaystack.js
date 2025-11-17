@@ -92,7 +92,8 @@ export default async function handler(req, res) {
     const timestamp = Date.now();
     const randomHex = crypto.randomBytes(8).toString('hex'); // 16 chars
     const randomAlpha = Math.random().toString(36).substring(2, 9); // 7 chars
-    const reference = `inspire_${uid.slice(0, 8)}_${timestamp}_${randomHex}_${randomAlpha}`;
+    const reference = `inspire_${crypto.randomUUID()}`;
+
 
     console.log('🆔 Generated unique reference:', reference);
 
