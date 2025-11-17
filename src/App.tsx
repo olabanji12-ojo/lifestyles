@@ -17,8 +17,12 @@ import Dashboard from './components/Dashboard'
 import AdminProducts from './components/AdminProducts'
 import AdminOrders from './components/AdminOrders'
 import AdminRequests from './components/AdminRequests'
-
-
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import Signup from './components/Signup'
+import { CartProvider } from './context/CartContext';
+import OrderConfirmation from './components/OrderConfirmation';
+import PaymentFailed from './components/PaymentFailed';
 
 // Home Page Component
 function HomePage() {
@@ -45,10 +49,13 @@ function App() {
   }, []);
 
   return (
+    <AuthProvider>
+    <CartProvider> 
     <Router>
       {/* Remove flex and min-h-screen from parent, use simple structure */}
       <div className="relative">
-        <Navigation
+        // After:
+      <Navigation
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
         />
@@ -56,27 +63,61 @@ function App() {
         {/* Main content area - this should control the scrolling */}
         <main className="min-h-screen">
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/personalize" element={<Personalize />} />
-            <Route path="/inspired" element={<Beinspired />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/adminproducts" element={<AdminProducts />} />
-            <Route path="/adminorders" element={<AdminOrders />} />
-            <Route path="/adminrequests" element={<AdminRequests />} />
+  {/* PUBLIC — ANYONE CAN SEE */}
+  <Route path="/" element={<HomePage />} />
+  <Route path="/shop" element={<Shop />} />
+  <Route path="/personalize" element={<Personalize />} />
+  <Route path="/inspired" element={<Beinspired />} />
+  <Route path="/product/:id" element={<ProductDetail />} />
+  <Route path="/cart" element={<Cart />} />
+  <Route path="/checkout" element={<Checkout />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/signup" element={<Signup />} />
+  <Route path="/order-confirmation" element={<OrderConfirmation />} />
+  <Route path="/payment-failed" element={<PaymentFailed />} />
 
-
-          </Routes>
+  {/* ADMIN ONLY — GUARDED */}
+  <Route
+    path="/dashboard"
+    element={
+      <ProtectedRoute>
+        <Dashboard />
+       </ProtectedRoute>
+    }
+  />
+  <Route
+    path="/adminproducts"
+    element={
+      <ProtectedRoute>
+        <AdminProducts />
+       </ProtectedRoute>
+    }
+  />
+  <Route
+    path="/adminorders"
+    element={
+      <ProtectedRoute>
+        <AdminOrders />
+      </ProtectedRoute>
+    }
+  />
+  <Route
+    path="/adminrequests"
+    element={
+       <ProtectedRoute>
+        <AdminRequests />
+      </ProtectedRoute>
+    }
+  />
+</Routes>
         </main>
         
         {/* Footer will naturally follow the content */}
         <Footer />
       </div>
     </Router>
+    </CartProvider>
+  </AuthProvider> 
   );
 }
 

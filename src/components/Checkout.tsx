@@ -1,35 +1,32 @@
-import { useState, FormEvent } from 'react';
+// src/pages/Checkout.tsx
+import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Check, Loader2, ShoppingBag } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
-// Order item type
-interface OrderItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
+// Dynamically import Paystack
+let Paystack: any = null;
+if (typeof window !== 'undefined') {
+  import('@paystack/inline-js').then(module => {
+    Paystack = module.default;
+  });
 }
-
-// Mock order items (from cart)
-const mockOrderItems: OrderItem[] = [
-  { id: '1', name: 'Luxury Silk Scarf', price: 12000, quantity: 1, image: '/silk3.jpg' },
-  { id: '2', name: 'Artisanal Leather Wallet', price: 8500, quantity: 1, image: '/box1.jpg' },
-  { id: '3', name: 'Ceramic Essential Oil Diffuser', price: 10000, quantity: 2, image: '/bowl1.webp' },
-];
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { cart, cartTotal, clearCart } = useCart();
+
   const [currentStep, setCurrentStep] = useState(1);
-  const [saveAddress, setSaveAddress] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   // Form state
-  const [contactInfo, setContactInfo] = useState({
+  const [formData, setFormData] = useState({
     email: '',
     phone: '',
-  });
-
-  const [shippingAddress, setShippingAddress] = useState({
     firstName: '',
     lastName: '',
     streetAddress: '',
@@ -41,24 +38,52 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Calculate totals
-  const subtotal = mockOrderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 1500;
-  const orderTotal = subtotal + shipping;
+  const subtotal = cartTotal;
+  const shipping = subtotal > 50000 ? 0 : 2000;
+  const tax = Math.round(subtotal * 0.075); // 7.5% VAT
+  const orderTotal = subtotal + shipping + tax;
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!currentUser) {
+      toast.error('Please sign in to checkout');
+      navigate('/login?redirect=/checkout');
+    }
+  }, [currentUser, navigate]);
+
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (cart.length === 0 && !loading) {
+      toast.error('Your cart is empty');
+      navigate('/cart');
+    }
+  }, [cart, navigate, loading]);
+
+  // Pre-fill form with user data
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        email: currentUser.email || '',
+        firstName: currentUser.displayName?.split(' ')[0] || '',
+        lastName: currentUser.displayName?.split(' ').slice(1).join(' ') || '',
+      }));
+    }
+  }, [currentUser]);
 
   // Validation
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!contactInfo.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) newErrors.email = 'Please enter a valid email address';
+    if (!formData.email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Please enter a valid email address';
 
-    if (!contactInfo.phone) newErrors.phone = 'Phone number is required';
-
-    if (!shippingAddress.firstName) newErrors.firstName = 'First name is required';
-    if (!shippingAddress.lastName) newErrors.lastName = 'Last name is required';
-    if (!shippingAddress.streetAddress) newErrors.streetAddress = 'Street address is required';
-    if (!shippingAddress.city) newErrors.city = 'City is required';
-    if (!shippingAddress.state) newErrors.state = 'State is required';
+    if (!formData.phone) newErrors.phone = 'Phone number is required';
+    if (!formData.firstName) newErrors.firstName = 'First name is required';
+    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    if (!formData.streetAddress) newErrors.streetAddress = 'Street address is required';
+    if (!formData.city) newErrors.city = 'City is required';
+    if (!formData.state) newErrors.state = 'State is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -66,21 +91,158 @@ export default function Checkout() {
 
   const handleContinueToPayment = (e: FormEvent) => {
     e.preventDefault();
-    if (validateStep1()) setCurrentStep(2);
+    if (validateStep1()) {
+      setCurrentStep(2);
+    }
   };
 
-  const handlePayment = (e: FormEvent) => {
+  // Handle Paystack Payment
+  const handlePayment = async (e: FormEvent) => {
     e.preventDefault();
-    setCurrentStep(3);
 
-    // Mock success - replace with Paystack integration
-    setTimeout(() => {
-      navigate('/order-confirmation');
-    }, 2000);
+    if (!Paystack) {
+      toast.error('Payment system not loaded. Please refresh and try again.');
+      return;
+    }
+
+    if (!currentUser) {
+      toast.error('Please sign in to continue');
+      navigate('/login?redirect=/checkout');
+      return;
+    }
+
+    setProcessingPayment(true);
+    setLoading(true);
+
+    try {
+      // Step 1: Initialize payment with backend
+      const initRes = await fetch('/api/initializePaystack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          email: formData.email,
+          shippingAddress: `${formData.streetAddress}, ${formData.city}, ${formData.state}`,
+          customerInfo: {
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone,
+          },
+        }),
+      });
+
+      if (!initRes.ok) {
+        const errorData = await initRes.json();
+        throw new Error(errorData.error || 'Failed to initialize payment');
+      }
+
+      const { authorization_url, reference, orderId } = await initRes.json();
+
+      console.log('✅ Payment initialized:', reference);
+
+      // Step 2: Open Paystack popup
+      const paystack = new Paystack();
+      
+      paystack.checkout({
+        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        email: formData.email,
+        amount: orderTotal * 100, // Convert to kobo
+        currency: 'NGN',
+        ref: reference,
+        
+        onSuccess: async (transaction: any) => {
+          console.log('✅ Payment successful:', transaction.reference);
+          setCurrentStep(3);
+
+          try {
+            // Step 3: Verify payment with backend
+            const verifyRes = await fetch('/api/verifyPaystack', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reference: transaction.reference,
+                uid: currentUser.uid,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.verified) {
+              console.log('✅ Payment verified');
+              
+              // Clear cart
+              await clearCart();
+
+              // Redirect to success page
+              setTimeout(() => {
+                navigate('/order-confirmation', {
+                  state: {
+                    reference: transaction.reference,
+                    orderId: verifyData.orderId,
+                    amount: orderTotal,
+                  },
+                });
+              }, 1500);
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            console.error('❌ Verification error:', error);
+            toast.error('Payment verification failed. Please contact support.');
+            navigate('/payment-failed', {
+              state: { reference: transaction.reference },
+            });
+          }
+        },
+
+        onCancel: () => {
+          console.log('⚠️ Payment cancelled by user');
+          setProcessingPayment(false);
+          setLoading(false);
+          toast.error('Payment cancelled');
+          navigate('/payment-failed', {
+            state: { reason: 'Payment cancelled' },
+          });
+        },
+
+        onError: (error: any) => {
+          console.error('❌ Payment error:', error);
+          setProcessingPayment(false);
+          setLoading(false);
+          toast.error('Payment failed. Please try again.');
+          navigate('/payment-failed', {
+            state: { reason: 'Payment error', details: error.message },
+          });
+        },
+      });
+
+    } catch (error: any) {
+      console.error('❌ Checkout error:', error);
+      toast.error(error.message || 'Failed to process payment');
+      setProcessingPayment(false);
+      setLoading(false);
+    }
   };
+
+  // Get item price (handle variants)
+  const getItemPrice = (item: any) => {
+    return item.variant ? item.variant.price : item.price;
+  };
+
+  // Get item total
+  const getItemTotal = (item: any) => {
+    return getItemPrice(item) * item.quantity;
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] pt-20 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-yellow-600" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-[#FAF9F6] pt-20">
       <div className="max-w-screen-xl mx-auto px-6 sm:px-10 py-12">
         {/* Header */}
         <div className="text-center mb-12" data-aos="fade-down">
@@ -94,35 +256,35 @@ export default function Checkout() {
             {/* Step 1 */}
             <div className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 1 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-400'
+                currentStep >= 1 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
               }`}>
                 {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
               </div>
               <span className="text-xs text-gray-500">Shipping</span>
             </div>
 
-            <div className={`h-0.5 w-16 ${currentStep >= 2 ? 'bg-yellow-500' : 'bg-gray-300'}`} />
+            <div className={`h-0.5 w-16 ${currentStep >= 2 ? 'bg-yellow-600' : 'bg-gray-300'}`} />
 
             {/* Step 2 */}
             <div className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 2 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-400'
+                currentStep >= 2 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
               }`}>
                 {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
               </div>
               <span className="text-xs text-gray-500">Payment</span>
             </div>
 
-            <div className={`h-0.5 w-16 ${currentStep >= 3 ? 'bg-yellow-500' : 'bg-gray-300'}`} />
+            <div className={`h-0.5 w-16 ${currentStep >= 3 ? 'bg-yellow-600' : 'bg-gray-300'}`} />
 
             {/* Step 3 */}
             <div className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 3 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-400'
+                currentStep >= 3 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
               }`}>
                 3
               </div>
-              <span className="text-xs text-gray-500">Review</span>
+              <span className="text-xs text-gray-500">Complete</span>
             </div>
           </div>
         </div>
@@ -135,7 +297,6 @@ export default function Checkout() {
                 {/* Shipping Address */}
                 <div className="bg-white shadow-md rounded-lg p-6">
                   <h3 className="text-gray-900 text-xl font-semibold mb-6">Shipping Address</h3>
-                  <p className="text-gray-500 text-sm mb-6">Enter your delivery details to proceed</p>
 
                   {/* Contact Info */}
                   <div className="mb-6">
@@ -148,10 +309,10 @@ export default function Checkout() {
                         <input
                           type="email"
                           id="email"
-                          value={contactInfo.email}
-                          onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
-                          placeholder="invalid@example.com"
-                          className={`w-full bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className={`w-full bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                          required
                         />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                       </div>
@@ -162,10 +323,10 @@ export default function Checkout() {
                         <input
                           type="tel"
                           id="phone"
-                          value={contactInfo.phone}
-                          onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
-                          placeholder="+1 (555) 123-4567"
-                          className={`w-full bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className={`w-full bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                          required
                         />
                         {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                       </div>
@@ -184,10 +345,10 @@ export default function Checkout() {
                           <input
                             type="text"
                             id="firstName"
-                            value={shippingAddress.firstName}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, firstName: e.target.value })}
-                            placeholder="John"
-                            className={`w-full bg-white border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                            value={formData.firstName}
+                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                            className={`w-full bg-white border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            required
                           />
                         </div>
                         <div>
@@ -197,10 +358,10 @@ export default function Checkout() {
                           <input
                             type="text"
                             id="lastName"
-                            value={shippingAddress.lastName}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, lastName: e.target.value })}
-                            placeholder="Doe"
-                            className={`w-full bg-white border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                            value={formData.lastName}
+                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            className={`w-full bg-white border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            required
                           />
                         </div>
                       </div>
@@ -212,10 +373,10 @@ export default function Checkout() {
                         <input
                           type="text"
                           id="streetAddress"
-                          value={shippingAddress.streetAddress}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, streetAddress: e.target.value })}
-                          placeholder="789 Maple Avenue"
-                          className={`w-full bg-white border ${errors.streetAddress ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                          value={formData.streetAddress}
+                          onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                          className={`w-full bg-white border ${errors.streetAddress ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                          required
                         />
                       </div>
 
@@ -227,23 +388,23 @@ export default function Checkout() {
                           <input
                             type="text"
                             id="city"
-                            value={shippingAddress.city}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                            placeholder="Fairview"
-                            className={`w-full bg-white border ${errors.city ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                            value={formData.city}
+                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                            className={`w-full bg-white border ${errors.city ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            required
                           />
                         </div>
                         <div>
                           <label htmlFor="state" className="block text-gray-700 text-sm mb-2">
-                            State / Province *
+                            State *
                           </label>
                           <input
                             type="text"
                             id="state"
-                            value={shippingAddress.state}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                            placeholder="California"
-                            className={`w-full bg-white border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500`}
+                            value={formData.state}
+                            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                            className={`w-full bg-white border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            required
                           />
                         </div>
                         <div>
@@ -253,32 +414,20 @@ export default function Checkout() {
                           <input
                             type="text"
                             id="postalCode"
-                            value={shippingAddress.postalCode}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                            placeholder="90210"
-                            className="w-full bg-white border border-gray-300 rounded px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                            value={formData.postalCode}
+                            onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                            className="w-full bg-white border border-gray-300 rounded px-4 py-3 text-gray-900"
                           />
                         </div>
                       </div>
-
-                      <label className="flex items-center gap-3 cursor-pointer mt-2">
-                        <input
-                          type="checkbox"
-                          checked={saveAddress}
-                          onChange={(e) => setSaveAddress(e.target.checked)}
-                          className="w-4 h-4 rounded border-gray-400 bg-white checked:bg-yellow-500 checked:border-yellow-500 focus:ring-yellow-500 cursor-pointer"
-                        />
-                        <span className="text-gray-600 text-sm">Save this address for future purchases</span>
-                      </label>
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-yellow-500 text-white py-4 text-sm tracking-wider font-bold hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 mt-4"
+                    className="w-full bg-yellow-600 text-black py-4 text-sm tracking-wider font-bold rounded hover:bg-yellow-500 transition-colors mt-6"
                   >
-                    CONTINUE TO PAYMENT
-                    <span>→</span>
+                    CONTINUE TO PAYMENT →
                   </button>
                 </div>
               </form>
@@ -295,14 +444,29 @@ export default function Checkout() {
 
                   <button
                     onClick={handlePayment}
-                    className="w-full bg-yellow-500 text-white py-4 text-sm tracking-wider font-bold hover:bg-yellow-400 transition-colors"
+                    disabled={processingPayment}
+                    className="w-full bg-yellow-600 text-black py-4 text-sm tracking-wider font-bold rounded hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    PAY ₦{orderTotal.toLocaleString()}
+                    {processingPayment ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        PROCESSING...
+                      </>
+                    ) : (
+                      <>PAY ₦{orderTotal.toLocaleString()}</>
+                    )}
                   </button>
 
                   <p className="text-gray-400 text-xs text-center mt-4">
-                    Secure payment powered by Paystack
+                    🔒 Secure payment powered by Paystack
                   </p>
+
+                  <button
+                    onClick={() => setCurrentStep(1)}
+                    className="w-full mt-4 text-gray-600 hover:text-yellow-600 transition"
+                  >
+                    ← Back to Shipping
+                  </button>
                 </div>
               </div>
             )}
@@ -310,11 +474,12 @@ export default function Checkout() {
             {/* Processing Step */}
             {currentStep === 3 && (
               <div className="text-center py-12" data-aos="zoom-in">
-                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                   <Check className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-3xl text-gray-900 mb-4">Processing Payment...</h3>
+                <h3 className="text-3xl text-gray-900 mb-4">Verifying Payment...</h3>
                 <p className="text-gray-500">Please wait while we confirm your order</p>
+                <Loader2 className="w-8 h-8 animate-spin text-yellow-600 mx-auto mt-6" />
               </div>
             )}
           </div>
@@ -324,21 +489,25 @@ export default function Checkout() {
             <div className="bg-white shadow-md rounded-lg p-6 sticky top-24">
               <h3 className="text-gray-900 text-xl font-semibold mb-6">Order Summary</h3>
 
-              <div className="space-y-4 mb-6">
-                {mockOrderItems.map((item) => (
+              <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                {cart.map((item) => (
                   <div key={item.id} className="flex gap-4">
-                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                        <ShoppingBag className="w-8 h-8 text-gray-400" />
+                      </div>
+                    )}
                     <div className="flex-1">
-                      <p
-                        className="text-gray-900 text-sm mb-1"
-                        style={{ fontFamily: 'Dancing Script, cursive' }}
-                      >
-                        {item.name}
-                      </p>
+                      <p className="text-gray-900 text-sm font-medium mb-1">{item.name}</p>
+                      {item.variant && (
+                        <p className="text-gray-500 text-xs">Size: {item.variant.size}</p>
+                      )}
                       <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
                     </div>
                     <p className="text-gray-900 font-semibold">
-                      ₦{(item.price * item.quantity).toLocaleString()}
+                      ₦{getItemTotal(item).toLocaleString()}
                     </p>
                   </div>
                 ))}
@@ -351,11 +520,17 @@ export default function Checkout() {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>₦{shipping.toLocaleString()}</span>
+                  <span className={shipping === 0 ? 'text-green-600' : ''}>
+                    {shipping === 0 ? 'Free' : `₦${shipping.toLocaleString()}`}
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Tax (7.5%)</span>
+                  <span>₦{tax.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-gray-900 text-xl font-bold pt-3 border-t border-gray-200">
                   <span>Order Total</span>
-                  <span className="text-yellow-500">₦{orderTotal.toLocaleString()}</span>
+                  <span className="text-yellow-600">₦{orderTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>

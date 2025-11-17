@@ -1,45 +1,39 @@
-import { useState } from 'react';
+// src/pages/Shop.tsx
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Grid, List, X } from 'lucide-react';
+import { Search, Grid, List, X, Loader2, ShoppingBag } from 'lucide-react';
+import { getProducts, Product } from '../firebase/helpers';
+import toast from 'react-hot-toast';
 
-// Categories from homepage
+// Filter options
 const categories = [
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'gifts', label: 'Gifts' },
-  { id: 'packaging', label: 'Packaging' },
-  { id: 'home', label: 'Home' },
-  { id: 'events', label: 'Events' },
+  { id: 'Fashion', label: 'Fashion' },
+  { id: 'Accessories', label: 'Accessories' },
+  { id: 'Gifts', label: 'Gifts' },
+  { id: 'Home', label: 'Home' },
+  { id: 'Productivity', label: 'Productivity' },
+  { id: 'Events', label: 'Events' },
+  { id: 'Packaging', label: 'Packaging' },
 ];
 
 const functions = [
-  { id: 'work', label: 'Work' },
-  { id: 'play', label: 'Play' },
-  { id: 'fancy', label: 'Fancy' },
-  { id: 'sleep', label: 'Sleep' },
-  { id: 'eat', label: 'Eat' },
+  { id: 'Work', label: 'Work' },
+  { id: 'Play', label: 'Play' },
+  { id: 'Fancy', label: 'Fancy' },
+  { id: 'Sleep', label: 'Sleep' },
+  { id: 'Eat', label: 'Eat' },
 ];
 
 const colors = [
-  { id: 'darks', label: 'Darks' },
-  { id: 'brights', label: 'Brights' },
-  { id: 'neutrals', label: 'Neutrals' },
-  { id: 'lights', label: 'Lights' },
-];
-
-const sampleProducts = [
-  { id: 1, name: 'Silk Kimono', price: 45000, image: '/silk2.jpg', badge: 'New', category: 'fashion' },
-  { id: 2, name: 'Leather Bag', price: 32000, image: '/white_jewelry1.jpg', badge: 'Sale', category: 'accessories' },
-  { id: 3, name: 'Gift Box Set', price: 15000, image: '/box1.jpg', category: 'gifts' },
-  { id: 4, name: 'Cotton Kaftan', price: 38000, image: '/silk3.jpg', badge: 'New', category: 'fashion' },
-  { id: 5, name: 'Silk Scarf', price: 12000, image: '/flower1.jpg', category: 'accessories' },
-  { id: 6, name: 'Bedding Set', price: 55000, image: '/bed1.jpg', category: 'home' },
-  { id: 7, name: 'Ceramic Bowl', price: 8500, image: '/bowl1.webp', badge: 'Sale', category: 'home' },
-  { id: 8, name: 'Event Banner', price: 25000, image: '/baloon.jpg', category: 'events' },
-  { id: 9, name: 'Premium Packaging', price: 18000, image: '/flower5.jpeg', category: 'packaging' },
+  { id: 'Dark', label: 'Dark' },
+  { id: 'Bright', label: 'Bright' },
+  { id: 'Neutral', label: 'Neutral' },
 ];
 
 export default function Shop() {
+  // State
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedFunctions, setSelectedFunctions] = useState<string[]>([]);
@@ -47,6 +41,23 @@ export default function Shop() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('relevance');
 
+  // Fetch products from Firestore on mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const result = await getProducts();
+    if (result.success) {
+      setProducts(result.products);
+    } else {
+      toast.error('Failed to load products');
+    }
+    setLoading(false);
+  };
+
+  // Filter toggle functions
   const toggleFilter = (type: 'category' | 'function' | 'color', id: string) => {
     if (type === 'category') {
       setSelectedCategories(prev =>
@@ -71,13 +82,82 @@ export default function Shop() {
     setSelectedCategories([]);
     setSelectedFunctions([]);
     setSelectedColors([]);
+    setSearchQuery('');
   };
 
+  // Client-side filtering
+  const filteredProducts = products.filter(product => {
+    // Search filter
+   const matchesSearch =
+  (product.name ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    
+    // Category filter
+    const matchesCategory = selectedCategories.length === 0 || 
+      selectedCategories.includes(product.category);
+    
+    // Function filter
+    const matchesFunction = selectedFunctions.length === 0 || 
+      selectedFunctions.some(fn => product.functions?.includes(fn));
+    
+    // Color filter
+    const matchesColor = selectedColors.length === 0 || 
+      selectedColors.some(color => product.colors?.includes(color));
+    
+    return matchesSearch && matchesCategory && matchesFunction && matchesColor;
+  });
+
+  // Sorting
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        const priceA = a.hasVariants && a.variants ? Math.min(...a.variants.map(v => v.price)) : (a.price || 0);
+        const priceB = b.hasVariants && b.variants ? Math.min(...b.variants.map(v => v.price)) : (b.price || 0);
+        return priceA - priceB;
+      case 'price-high':
+        const priceHighA = a.hasVariants && a.variants ? Math.max(...a.variants.map(v => v.price)) : (a.price || 0);
+        const priceHighB = b.hasVariants && b.variants ? Math.max(...b.variants.map(v => v.price)) : (b.price || 0);
+        return priceHighB - priceHighA;
+      case 'newest':
+        return b.createdAt?.toMillis() - a.createdAt?.toMillis();
+      default:
+        return 0;
+    }
+  });
+
+  // Active filters for display
   const activeFilters = [
     ...selectedCategories.map(id => ({ type: 'category' as const, id, label: categories.find(c => c.id === id)?.label || '' })),
     ...selectedFunctions.map(id => ({ type: 'function' as const, id, label: functions.find(f => f.id === id)?.label || '' })),
     ...selectedColors.map(id => ({ type: 'color' as const, id, label: colors.find(c => c.id === id)?.label || '' })),
   ];
+
+  // Get product price display
+  const getProductPrice = (product: Product) => {
+    if (product.hasVariants && product.variants && product.variants.length > 0) {
+      const minPrice = Math.min(...product.variants.map(v => v.price));
+      return `From ₦${minPrice.toLocaleString()}`;
+    }
+    return `₦${(product.price || 0).toLocaleString()}`;
+  };
+
+  // Check if product is out of stock
+  const isOutOfStock = (product: Product) => {
+    if (product.hasVariants && product.variants) {
+      return product.variants.every(v => v.stock === 0);
+    }
+    return (product.stock || 0) === 0;
+  };
+
+  // Add to cart handler (placeholder for now)
+  const handleAddToCart = (product: Product) => {
+    if (isOutOfStock(product)) {
+      toast.error('This product is out of stock');
+      return;
+    }
+    // TODO: Implement cart functionality in next phase
+    toast.success(`${product.name} added to cart!`);
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-gray-800 pt-20">
@@ -236,80 +316,107 @@ export default function Shop() {
               </div>
             </div>
 
-            {/* Product Count */}
-            <p className="text-gray-600 text-sm mb-6">
-              Showing 1-{sampleProducts.length} of {sampleProducts.length} products
-            </p>
-
-            {/* Products */}
-            <div
-              className={
-                viewMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'flex flex-col gap-6'
-              }
-            >
-              {sampleProducts.map((product, index) => (
-                <article
-                  key={product.id}
-                  className="group relative bg-white rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow"
-                  data-aos="fade-up"
-                  data-aos-delay={index * 50}
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-32">
+                <Loader2 className="w-12 h-12 animate-spin text-yellow-600 mb-4" />
+                <p className="text-gray-600">Loading products...</p>
+              </div>
+            ) : sortedProducts.length === 0 ? (
+              /* No Products Found */
+              <div className="flex flex-col items-center justify-center py-32">
+                <ShoppingBag className="w-16 h-16 text-gray-400 mb-4" />
+                <p className="text-gray-600 text-lg mb-2">No products found</p>
+                <p className="text-gray-500 text-sm mb-6">Try adjusting your filters</p>
+                <button
+                  onClick={clearAllFilters}
+                  className="bg-yellow-600 text-black px-6 py-2 rounded hover:bg-yellow-500 transition"
                 >
-                  {/* Badge */}
-                  {product.badge && (
-                    <span
-                      className={`absolute top-4 left-4 z-10 px-3 py-1 rounded text-xs font-bold tracking-wider ${
-                        product.badge === 'Sale'
-                          ? 'bg-red-500 text-white'
-                          : 'bg-yellow-600 text-black'
-                      }`}
-                    >
-                      {product.badge}
-                    </span>
-                  )}
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Product Count */}
+                <p className="text-gray-600 text-sm mb-6">
+                  Showing {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''}
+                </p>
 
-                  {/* Image */}
-                  <Link to={`/product/${product.id}`} className="block aspect-square bg-gray-100 overflow-hidden">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </Link>
-
-                  {/* Info */}
-                  <div className="p-4">
-                    <Link
-                      to={`/product/${product.id}`}
-                      className="text-gray-900 text-lg font-medium mb-2 block hover:text-yellow-600 transition-colors"
-                      style={{ fontFamily: 'Dancing Script, cursive' }}
+                {/* Products */}
+                <div
+                  className={
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                      : 'flex flex-col gap-6'
+                  }
+                >
+                  {sortedProducts.map((product, index) => (
+                    <article
+                      key={product.id}
+                      className="group relative bg-white rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow"
+                      data-aos="fade-up"
+                      data-aos-delay={index * 50}
                     >
-                      {product.name}
-                    </Link>
-                    <p className="text-yellow-600 text-xl font-semibold mb-4">
-                      ₦{product.price.toLocaleString()}
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        alert(`Added ${product.name} to cart!`);
-                      }}
-                      className="w-full bg-yellow-600 text-black py-2 text-sm tracking-wider font-bold rounded hover:bg-yellow-500 transition-colors"
-                    >
-                      ADD TO CART
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
+                      {/* Out of Stock Badge */}
+                      {isOutOfStock(product) && (
+                        <span className="absolute top-4 left-4 z-10 px-3 py-1 rounded text-xs font-bold tracking-wider bg-gray-500 text-white">
+                          OUT OF STOCK
+                        </span>
+                      )}
 
-            {/* Load More */}
-            <div className="text-center mt-12">
-              <button className="bg-gray-100 text-gray-800 px-8 py-3 text-sm tracking-wider border border-gray-300 rounded hover:bg-yellow-600 hover:text-black hover:border-yellow-600 transition-colors">
-                LOAD MORE
-              </button>
-            </div>
+                      {/* Featured Badge */}
+                      {product.featured && !isOutOfStock(product) && (
+                        <span className="absolute top-4 left-4 z-10 px-3 py-1 rounded text-xs font-bold tracking-wider bg-yellow-600 text-black">
+                          FEATURED
+                        </span>
+                      )}
+
+                      {/* Image */}
+                      <Link to={`/product/${product.id}`} className="block aspect-square bg-gray-100 overflow-hidden">
+                        {product.images && product.images[0] ? (
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                              isOutOfStock(product) ? 'opacity-50' : ''
+                            }`}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                            <ShoppingBag className="w-16 h-16 text-gray-400" />
+                          </div>
+                        )}
+                      </Link>
+
+                      {/* Info */}
+                      <div className="p-4">
+                        <Link
+                          to={`/product/${product.id}`}
+                          className="text-gray-900 text-lg font-medium mb-2 block hover:text-yellow-600 transition-colors"
+                          style={{ fontFamily: 'Dancing Script, cursive' }}
+                        >
+                          {product.name}
+                        </Link>
+                        <p className="text-yellow-600 text-xl font-semibold mb-4">
+                          {getProductPrice(product)}
+                        </p>
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={isOutOfStock(product)}
+                          className={`w-full py-2 text-sm tracking-wider font-bold rounded transition-colors ${
+                            isOutOfStock(product)
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-yellow-600 text-black hover:bg-yellow-500'
+                          }`}
+                        >
+                          {isOutOfStock(product) ? 'OUT OF STOCK' : 'ADD TO CART'}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
           </main>
         </div>
       </div>

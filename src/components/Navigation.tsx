@@ -1,11 +1,12 @@
 // src/components/Navigation.tsx
 import { Search, User, ShoppingBag, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 interface NavigationProps {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
-  cartCount?: number;
 }
 
 const navLinks = [
@@ -18,8 +19,10 @@ const navLinks = [
 export default function Navigation({ 
   mobileMenuOpen, 
   setMobileMenuOpen,
-  cartCount = 0 
 }: NavigationProps) {
+  const { cartCount } = useCart(); // Get cart count from context
+  const { currentUser } = useAuth();
+
   return (
     <>
       {/* MAIN NAV - FULLY MOBILE FIXED */}
@@ -53,11 +56,28 @@ export default function Navigation({
               <button aria-label="Search" className="p-2 hover:text-yellow-700">
                 <Search className="w-5 h-5" />
               </button>
-              <button aria-label="Account" className="p-2 hover:text-yellow-700">
-                <User className="w-5 h-5" />
-              </button>
+              
+              {/* Account Icon - Link to login or profile */}
+              {currentUser ? (
+                <Link 
+                  to="/profile" 
+                  aria-label="Profile" 
+                  className="p-2 hover:text-yellow-700"
+                >
+                  <User className="w-5 h-5" />
+                </Link>
+              ) : (
+                <Link 
+                  to="/login" 
+                  aria-label="Login" 
+                  className="p-2 hover:text-yellow-700"
+                >
+                  <User className="w-5 h-5" />
+                </Link>
+              )}
             </div>
 
+            {/* Cart Icon with Count */}
             <Link
               to="/cart"
               aria-label={`Cart (${cartCount})`}
@@ -65,8 +85,8 @@ export default function Navigation({
             >
               <ShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-yellow-600 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
+                <span className="absolute -top-1 -right-1 bg-yellow-600 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </Link>
@@ -83,33 +103,32 @@ export default function Navigation({
         </div>
       </nav>
 
-  {/* MOBILE MENU BACKDROP + MENU */}
-<div
-  className={`fixed inset-0 z-40 flex items-center justify-center transition-all duration-500 lg:hidden ${
-    mobileMenuOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'
-  }`}
->
-  {/* BACKDROP */}
-  <div
-    onClick={() => setMobileMenuOpen(false)}
-    className="absolute inset-0 bg-[#F5F1E7]/90 backdrop-blur-md"
-  />
-
-  {/* MENU CONTENT */}
-  <div className="relative flex flex-col items-center gap-8 px-8">
-    {navLinks.map((link) => (
-      <Link
-        key={link.label}
-        to={link.href}
-        onClick={() => setMobileMenuOpen(false)}
-        className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-gray-900 hover:text-yellow-500 transition-colors text-center"
+      {/* MOBILE MENU BACKDROP + MENU */}
+      <div
+        className={`fixed inset-0 z-40 flex items-center justify-center transition-all duration-500 lg:hidden ${
+          mobileMenuOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'
+        }`}
       >
-        {link.label}
-      </Link>
-    ))}
-  </div>
-</div>
+        {/* BACKDROP */}
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="absolute inset-0 bg-[#F5F1E7]/90 backdrop-blur-md"
+        />
 
+        {/* MENU CONTENT */}
+        <div className="relative flex flex-col items-center gap-8 px-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              to={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-gray-900 hover:text-yellow-500 transition-colors text-center"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </>
   );
 }

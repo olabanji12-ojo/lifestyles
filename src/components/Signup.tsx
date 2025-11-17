@@ -1,46 +1,43 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function Login() {
+export default function Signup() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, googleSignIn, currentUser } = useAuth();
+  const { signup, googleSignIn } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  
-  // Get redirect URL from query params
-  const redirect = searchParams.get('redirect') || '/';
-
-  // If already logged in, redirect immediately
-  useEffect(() => {
-    if (currentUser) {
-      navigate(redirect);
-    }
-  }, [currentUser, navigate, redirect]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    if (password !== confirmPassword) {
+      setError('Passwords do not match!');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await login(email, password);
-      navigate('/dashboard'); // Redirect to dashboard after successful login
+      await signup(email, password, name);
+      navigate('/'); // Redirect to home page after successful signup
     } catch (err: any) {
       console.error(err);
       
       // Provide user-friendly error messages
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Invalid email or password.');
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already registered. Please log in instead.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many failed attempts. Please try again later.');
       } else {
-        setError('Failed to log in. Please check your credentials.');
+        setError('Failed to create an account. Please try again.');
       }
     }
 
@@ -52,7 +49,7 @@ export default function Login() {
       setLoading(true);
       setError(''); // Clear previous errors
       await googleSignIn();
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       console.error('Google Sign-In failed', error);
       setError(error.message || 'Google Sign-In failed. Please try again.');
@@ -78,14 +75,14 @@ export default function Login() {
           data-aos="fade-up" 
           data-aos-delay="200"
         >
-          Welcome Back
+          Join INSPIRE
         </h2>
         <p 
           className="text-center text-[#3E3E3E] mb-8" 
           data-aos="fade-up" 
           data-aos-delay="300"
         >
-          Log in to your INSPIRE account
+          Create an account to start your journey
         </p>
         
         {error && (
@@ -100,6 +97,24 @@ export default function Login() {
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div data-aos="fade-right" data-aos-delay="400">
+            <label 
+              htmlFor="name" 
+              className="block text-sm font-medium text-[#3E3E3E] mb-2"
+            >
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F4C430] transition-colors"
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+          
+          <div data-aos="fade-right" data-aos-delay="450">
             <label 
               htmlFor="email" 
               className="block text-sm font-medium text-[#3E3E3E] mb-2"
@@ -130,7 +145,25 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F4C430] transition-colors"
-              placeholder="Enter your password"
+              placeholder="Create a password"
+              required
+            />
+          </div>
+          
+          <div data-aos="fade-right" data-aos-delay="550">
+            <label 
+              htmlFor="confirmPassword" 
+              className="block text-sm font-medium text-[#3E3E3E] mb-2"
+            >
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F4C430] transition-colors"
+              placeholder="Confirm your password"
               required
             />
           </div>
@@ -144,7 +177,7 @@ export default function Login() {
             data-aos="zoom-in"
             data-aos-delay="600"
           >
-            {loading ? 'Logging In...' : 'Log In'}
+            {loading ? 'Signing Up...' : 'Sign Up'}
           </button>
         </form>
 
@@ -164,7 +197,7 @@ export default function Login() {
               alt="Google logo"
               className="w-5 h-5"
             />
-            <span className="text-[#3E3E3E] font-medium">Sign in with Google</span>
+            <span className="text-[#3E3E3E] font-medium">Sign up with Google</span>
           </button>
         </div>
 
@@ -173,9 +206,9 @@ export default function Login() {
           data-aos="fade-up" 
           data-aos-delay="700"
         >
-          Don't have an account?{' '}
-          <Link to="/signup" className="text-[#F4C430] hover:underline font-medium">
-            Sign Up
+          Already have an account?{' '}
+          <Link to="/login" className="text-[#F4C430] hover:underline font-medium">
+            Log In
           </Link>
         </p>
       </div>
