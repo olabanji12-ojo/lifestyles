@@ -3,11 +3,9 @@
 import crypto from 'node:crypto';
 import { getAdmin } from './_firebaseAdmin.js';
 
-export const config = {
-  runtime: 'nodejs',
-};
+export const config = { runtime: 'nodejs' };
 
-// Helper JSON response
+// Helper to send JSON responses
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
@@ -19,206 +17,169 @@ function json(res, status, body) {
 
 export default async function handler(req, res) {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return json(res, 200, { ok: true });
-  }
-
-  if (req.method !== 'POST') {
-    return json(res, 405, { error: 'Method not allowed' });
-  }
+  if (req.method === 'OPTIONS') return json(res, 200, { ok: true });
+  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
   const { PAYSTACK_SECRET_KEY } = process.env;
-  const FRONTEND_BASE_URL =
-    process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
+  const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
 
   if (!PAYSTACK_SECRET_KEY) {
-    console.error('❌ Missing PAYSTACK_SECRET_KEY');
-    return json(res, 500, { error: 'Missing PAYSTACK_SECRET_KEY' });
+    console.error('Missing PAYSTACK_SECRET_KEY');
+    return json(res, 500, { error: 'Server configuration error' });
   }
 
   try {
-    // ---------------------------------------------------------
-    // Step 1: Validate incoming data
-    // ---------------------------------------------------------
     const { uid, email, shippingAddress, customerInfo } = req.body || {};
 
     if (!uid || !email) {
       return json(res, 400, { error: 'Missing uid or email' });
     }
 
-    console.log(`📦 Starting Paystack init for user: ${uid}`);
+    console.log(`Starting checkout for user: ${uid}`);
 
     const { db } = getAdmin();
 
-    // ---------------------------------------------------------
-    // Step 2: Cancel existing pending orders
-    // ---------------------------------------------------------
-    console.log('🔍 Checking for existing pending orders...');
-
-    const existingOrders = await db
+    // ──────────────────────────────────────────────────────────────
+    // Step 1: Cancel any previous pending orders (prevent spam)
+    // ──────────────────────────────────────────────────────────────
+    const pendingOrdersSnap = await db
       .collection('orders')
       .where('customerId', '==', uid)
       .where('status', '==', 'Pending')
       .get();
 
-    if (!existingOrders.empty) {
-      console.log(
-        `⚠️ Found ${existingOrders.size} pending orders → marking as abandoned`
-      );
-
+    if (!pendingOrdersSnap.empty) {
+      console.log(`Found ${pendingOrdersSnap.size} pending order(s) → marking as Abandoned`);
       const batch = db.batch();
-
-      existingOrders.docs.forEach((doc) => {
+      pendingOrdersSnap.forEach(doc => {
         batch.update(doc.ref, {
           status: 'Abandoned',
+          abandonedReason: 'User started new checkout session',
           updatedAt: new Date(),
-          abandonedReason: 'User started a new checkout session',
         });
       });
-
       await batch.commit();
-      console.log('✅ Old pending orders marked as abandoned');
     }
 
-    // ---------------------------------------------------------
-    // Step 3: Load cart
-    // ---------------------------------------------------------
+    // ──────────────────────────────────────────────────────────────
+    // Step 2: Load and validate cart
+    // ──────────────────────────────────────────────────────────────
     const cartDoc = await db.collection('carts').doc(uid).get();
-
-    if (!cartDoc.exists) {
-      return json(res, 400, { error: 'Cart is empty or not found' });
-    }
-
-    const cartData = cartDoc.data();
-    const items = cartData.items || [];
-
-    if (!items.length) {
+    if (!cartDoc.exists || !cartDoc.data()?.items?.length) {
       return json(res, 400, { error: 'Cart is empty' });
     }
 
-    // ---------------------------------------------------------
-    // Step 4: Calculate total amount (Naira → Kobo)
-    // ---------------------------------------------------------
-    const amountNaira = items.reduce((sum, item) => {
-      const price = item.variant ? item.variant.price : item.price;
+    const items = cartDoc.data().items;
+
+    // ──────────────────────────────────────────────────────────────
+    // Step 3: Calculate total in kobo (Paystack expects amount in kobo)
+    // ──────────────────────────────────────────────────────────────
+    const totalNaira = items.reduce((sum, item) => {
+      const price = item.variant?.price || item.price;
       return sum + price * item.quantity;
     }, 0);
 
-    const amountKobo = Math.round(amountNaira * 100);
+    const amountKobo = Math.round(totalNaira * 100);
 
-    console.log(
-      `💰 Total amount: ₦${amountNaira} → ${amountKobo} kobo`
-    );
+    if (amountKobo < 100) { // Paystack minimum is ₦1 (100 kobo)
+      return json(res, 400, { error: 'Amount too low' });
+    }
 
-    // ---------------------------------------------------------
-    // Step 5: Create unique reference
-    // ---------------------------------------------------------
-    const reference = `inspire_${crypto.randomUUID()}`;
+    // ──────────────────────────────────────────────────────────────
+    // Step 4: Generate a 100% unique Paystack reference
+    //     We use Firestore auto-ID → guaranteed unique across entire project
+    // ──────────────────────────────────────────────────────────────
+    const orderRef = db.collection('orders').doc(); // ← This creates a unique ID immediately
+    const paystackReference = `inspire_${orderRef.id}`;
 
-    console.log('🆔 Generated Paystack reference:', reference);
+    console.log('Generated unique Paystack reference:', paystackReference);
 
-    // ---------------------------------------------------------
-    // Step 6: Create order document
-    // ---------------------------------------------------------
-    const orderRef = db.collection('orders').doc();
-    const orderId = orderRef.id;
-
+    // ──────────────────────────────────────────────────────────────
+    // Step 5: Create the order document (before calling Paystack)
+    // ──────────────────────────────────────────────────────────────
     const orderData = {
-      orderId: reference,
+      orderId: paystackReference,
+      paymentRef: paystackReference,
       customerId: uid,
       customerName: customerInfo?.fullName || '',
       customerEmail: email,
       customerPhone: customerInfo?.phone || '',
-      items: items.map(
-        ({ productId, name, price, quantity, variant, image }) => ({
-          productId,
-          productName: name,
-          quantity,
-          price: variant ? variant.price : price,
-          variant: variant
-            ? { size: variant.size, price: variant.price }
-            : null,
-          image: image || '',
-        })
-      ),
-      total: amountNaira,
-      status: 'Pending',
       shippingAddress: shippingAddress || '',
-      paymentRef: reference,
+      items: items.map(item => ({
+        productId: item.productId,
+        productName: item.name,
+        price: item.variant?.price || item.price,
+        quantity: item.quantity,
+        variant: item.variant ? { size: item.variant.size, price: item.variant.price } : null,
+        image: item.image || '',
+      })),
+      total: totalNaira,
+      status: 'Pending',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     await orderRef.set(orderData);
+    console.log('Order document created with ID:', orderRef.id);
 
-    console.log('✅ Order created:', orderId);
-
-    // ---------------------------------------------------------
-    // Step 7: Initialize Paystack transaction
-    // ---------------------------------------------------------
-    const initRes = await fetch(
-      'https://api.paystack.co/transaction/initialize',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json',
+    // ──────────────────────────────────────────────────────────────
+    // Step 6: Initialize Paystack transaction
+    // ──────────────────────────────────────────────────────────────
+    const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        amount: amountKobo,
+        currency: 'NGN',
+        reference: paystackReference,
+        callback_url: `${FRONTEND_BASE_URL}/order-confirmation?ref=${paystackReference}&oid=${orderRef.id}`,
+        metadata: {
+          orderId: orderRef.id,
+          uid,
+          custom_fields: [
+            { display_name: 'Customer Name', variable_name: 'customer_name', value: customerInfo?.fullName || 'N/A' },
+            { display_name: 'Phone', variable_name: 'customer_phone', value: customerInfo?.phone || 'N/A' },
+          ],
         },
-        body: JSON.stringify({
-          email,
-          amount: amountKobo,
-          currency: 'NGN',
-          reference,
-          callback_url: `${FRONTEND_BASE_URL}/order-confirmation?ref=${reference}&oid=${orderId}`,
-          metadata: {
-            orderId,
-            uid,
-            custom_fields: [
-              {
-                display_name: 'Customer Name',
-                variable_name: 'customer_name',
-                value: customerInfo?.fullName || 'N/A',
-              },
-              {
-                display_name: 'Phone',
-                variable_name: 'customer_phone',
-                value: customerInfo?.phone || 'N/A',
-              },
-            ],
-          },
-        }),
-      }
-    );
+      }),
+    });
 
-    const initJson = await initRes.json();
+    const paystackJson = await paystackResponse.json();
 
-    if (!initRes.ok || !initJson.status) {
-      console.error('❌ Paystack init failed:', initJson);
+    // ──────────────────────────────────────────────────────────────
+    // Step 7: Handle Paystack response
+    // ──────────────────────────────────────────────────────────────
+    if (!paystackResponse.ok || !paystackJson.status) {
+      console.error('Paystack initialization failed:', paystackJson);
 
+      // Mark this order as failed so it doesn't stay Pending forever
       await orderRef.update({
         status: 'Failed',
-        failureReason: initJson?.message || 'Initialization failed',
+        failureReason: paystackJson.message || 'Paystack initialization failed',
         updatedAt: new Date(),
       });
 
-      return json(res, 502, {
-        error: 'Paystack initialization failed',
-        details: initJson,
-      });
+      return json(res, 502, { error: 'Payment gateway error', details: paystackJson.message });
     }
 
-    console.log('✅ Paystack initialized with reference:', reference);
+    console.log('Paystack initialized successfully');
 
+    // ──────────────────────────────────────────────────────────────
+    // Step 8: Success! Return authorization URL to frontend
+    // ──────────────────────────────────────────────────────────────
     return json(res, 200, {
-      authorization_url: initJson.data.authorization_url,
-      reference,
-      orderId,
+      success: true,
+      authorization_url: paystackJson.data.authorization_url,
+      reference: paystackReference,
+      orderId: orderRef.id,
     });
+
   } catch (error) {
-    console.error('❌ Server error:', error);
-    return json(res, 500, {
-      error: 'Server error',
-      details: error.message,
-    });
+    console.error('Unexpected server error:', error);
+    return json(res, 500, { error: 'Internal server error', details: error.message });
   }
 }
