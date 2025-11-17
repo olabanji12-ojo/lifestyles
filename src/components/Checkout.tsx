@@ -98,37 +98,50 @@ export default function Checkout() {
 
   // Handle Paystack Payment
   const handlePayment = async (e: FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!Paystack) {
-      toast.error('Payment system not loaded. Please refresh and try again.');
-      return;
-    }
+  // ✅ FORCE FRESH STATE
+  setProcessingPayment(false); // Reset any stuck state
+  setLoading(false);
 
-    if (!currentUser) {
-      toast.error('Please sign in to continue');
-      navigate('/login?redirect=/checkout');
-      return;
-    }
+  console.log('🔄 Starting NEW payment attempt at', new Date().toISOString());
 
-    setProcessingPayment(true);
-    setLoading(true);
+  if (!Paystack) {
+    toast.error('Payment system not loaded. Please refresh and try again.');
+    return;
+  }
 
-    try {
-      // Step 1: Initialize payment with backend
-      const initRes = await fetch('/api/initializePaystack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: currentUser.uid,
-          email: formData.email,
-          shippingAddress: `${formData.streetAddress}, ${formData.city}, ${formData.state}`,
-          customerInfo: {
-            fullName: `${formData.firstName} ${formData.lastName}`,
-            phone: formData.phone,
-          },
-        }),
-      });
+  if (!currentUser) {
+    toast.error('Please sign in to continue');
+    navigate('/login?redirect=/checkout');
+    return;
+  }
+
+  setProcessingPayment(true);
+  setLoading(true);
+
+  try {
+    console.log('📞 Calling backend to initialize payment...');
+    
+    // ✅ ADD CACHE-BUSTING HEADER
+    const initRes = await fetch('/api/initializePaystack', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache', // ← Prevent caching
+      },
+      body: JSON.stringify({
+        uid: currentUser.uid,
+        email: formData.email,
+        shippingAddress: `${formData.streetAddress}, ${formData.city}, ${formData.state}`,
+        customerInfo: {
+          fullName: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone,
+        },
+        // ✅ Force uniqueness with timestamp
+        _t: Date.now(),
+      }),
+    });
 
       if (!initRes.ok) {
         const errorData = await initRes.json();
@@ -163,6 +176,23 @@ export default function Checkout() {
                 uid: currentUser.uid,
               }),
             });
+
+            const { authorization_url, reference, orderId } = await initRes.json();
+
+          // ✅ ADD THESE DEBUG LOGS:
+          console.log('🔍 BACKEND RESPONSE:', {
+            reference,
+            orderId,
+            authorization_url,
+            timestamp: new Date().toISOString()
+          });
+
+          console.log('🔍 ABOUT TO CALL PAYSTACK WITH:', {
+            key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY?.substring(0, 10) + '...',
+            email: formData.email,
+            amount: orderTotal * 100,
+            ref: reference
+          });
 
             const verifyData = await verifyRes.json();
 
