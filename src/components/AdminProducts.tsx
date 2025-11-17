@@ -274,94 +274,117 @@ export default function AdminProducts() {
           </select>
         </div>
 
-        {/* Products Table */}
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="w-12 h-12 animate-spin text-yellow-600" />
-          </div>
-        ) : (
-          <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="px-6 py-4 text-left">Product</th>
-                  <th className="px-6 py-4 text-left">Category</th>
-                  <th className="px-6 py-4 text-left">Price</th>
-                  <th className="px-6 py-4 text-left">Stock</th>
-                  <th className="px-6 py-4 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map(p => (
-                  <tr key={p.id} className="border-t border-white/10 hover:bg-white/5">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        {p.images && p.images[0] ? (
-                          <img src={p.images[0]} alt={p.name} className="w-16 h-16 object-cover rounded-lg" />
-                        ) : (
-                          <div className="w-16 h-16 bg-white/10 rounded-lg" />
-                        )}
-                        <div>
-                          <p className="font-medium">{p.name}</p>
-                          <p className="text-sm text-gray-400">{p.slug}</p>
-                        </div>
+        {/* PRODUCTS LIST – RESPONSIVE */}
+{loading ? (
+  <div className="flex justify-center items-center h-64">
+    <Loader2 className="w-12 h-12 animate-spin text-yellow-600" />
+  </div>
+) : (
+  <>
+    {/* Desktop table (hidden on mobile) */}
+    <div className="hidden md:block bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-white/10">
+          <tr>
+            <th className="px-6 py-4 text-left">Product</th>
+            <th className="px-6 py-4 text-left">Category</th>
+            <th className="px-6 py-4 text-left">Price</th>
+            <th className="px-6 py-4 text-left">Stock</th>
+            <th className="px-6 py-4 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredProducts.map((p) => (
+            <tr key={p.id} className="border-t border-white/10 hover:bg-white/5">
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-4">
+                  {p.images?.[0] ? (
+                    <img
+                      src={p.images[0]}
+                      alt={p.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-white/10 rounded-lg" />
+                  )}
+                  <div>
+                    <p className="font-medium">{p.name}</p>
+                    <p className="text-sm text-gray-400">{p.slug}</p>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 text-gray-300">{p.category}</td>
+              <td className="px-6 py-4 font-bold text-yellow-600">
+                {p.hasVariants ? (
+                  <span className="text-sm">
+                    From ₦{Math.min(...(p.variants?.map((v) => v.price) || [0])).toLocaleString()}
+                  </span>
+                ) : (
+                  `₦${p.price?.toLocaleString() || 0}`
+                )}
+              </td>
+              <td className="px-6 py-4">
+                {p.hasVariants ? (
+                  <div className="text-xs space-y-1">
+                    {p.variants?.map((v, i) => (
+                      <div
+                        key={i}
+                        className={`px-2 py-1 rounded ${
+                          v.stock > 10
+                            ? 'bg-green-500/20 text-green-400'
+                            : v.stock > 0
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}
+                      >
+                        {v.size}: {v.stock}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-300">{p.category}</td>
-                    <td className="px-6 py-4 font-bold text-yellow-600">
-                      {p.hasVariants ? (
-                        <span className="text-sm">
-                          From ₦{Math.min(...(p.variants?.map(v => v.price) || [0])).toLocaleString()}
-                        </span>
-                      ) : (
-                        `₦${p.price?.toLocaleString() || 0}`
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {p.hasVariants ? (
-                        <div className="text-xs space-y-1">
-                          {p.variants?.map((v, i) => (
-                            <div key={i} className={`px-2 py-1 rounded ${
-                              v.stock > 10 ? 'bg-green-500/20 text-green-400' : 
-                              v.stock > 0 ? 'bg-yellow-500/20 text-yellow-400' : 
-                              'bg-red-500/20 text-red-400'
-                            }`}>
-                              {v.size}: {v.stock}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs ${
-                          (p.stock || 0) > 10 ? 'bg-green-500/20 text-green-400' : 
-                          (p.stock || 0) > 0 ? 'bg-yellow-500/20 text-yellow-400' : 
-                          'bg-red-500/20 text-red-400'
-                        }`}>
-                          {p.stock} in stock
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-3">
-                        <button 
-                          onClick={() => openEditModal(p)}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(p.id!)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    ))}
+                  </div>
+                ) : (
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs ${
+                      (p.stock || 0) > 10
+                        ? 'bg-green-500/20 text-green-400'
+                        : (p.stock || 0) > 0
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-red-500/20 text-red-400'
+                    }`}
+                  >
+                    {p.stock} in stock
+                  </span>
+                )}
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => openEditModal(p)}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p.id!)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Mobile cards (hidden on desktop) */}
+    <div className="md:hidden space-y-4">
+      {filteredProducts.map((p) => (
+        <ProductCard key={p.id} product={p} onEdit={openEditModal} onDelete={handleDelete} />
+      ))}
+    </div>
+  </>
+)}
 
         {/* Add/Edit Modal */}
         {showModal && (
@@ -616,6 +639,128 @@ export default function AdminProducts() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+
+/* Mobile collapsible card */
+function ProductCard({
+  product,
+  onEdit,
+  onDelete,
+}: {
+  product: Product;
+  onEdit: (p: Product) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="bg-white/5 rounded-2xl border border-white/10 p-4">
+      {/* Header row */}
+      <div className="flex items-center gap-4">
+        {product.images?.[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            className="w-14 h-14 object-cover rounded-lg"
+          />
+        ) : (
+          <div className="w-14 h-14 bg-white/10 rounded-lg" />
+        )}
+        <div className="flex-1">
+          <p className="font-medium text-white">{product.name}</p>
+          <p className="text-xs text-gray-400">{product.category}</p>
+        </div>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="text-yellow-600"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className={`w-5 h-5 transition-transform ${open ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Collapsible body */}
+      {open && (
+        <div className="mt-4 space-y-3 border-t border-white/10 pt-3">
+          {/* Price */}
+          <div>
+            <span className="text-xs text-gray-400">Price</span>
+            <p className="font-bold text-yellow-600">
+              {product.hasVariants
+                ? `From ₦${Math.min(
+                    ...(product.variants?.map((v) => v.price) || [0])
+                  ).toLocaleString()}`
+                : `₦${product.price?.toLocaleString() || 0}`}
+            </p>
+          </div>
+
+          {/* Stock */}
+          <div>
+            <span className="text-xs text-gray-400">Stock</span>
+            {product.hasVariants ? (
+              <div className="mt-1 text-xs space-y-1">
+                {product.variants?.map((v, i) => (
+                  <div
+                    key={i}
+                    className={`inline-block mr-2 mb-1 px-2 py-1 rounded ${
+                      v.stock > 10
+                        ? 'bg-green-500/20 text-green-400'
+                        : v.stock > 0
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-red-500/20 text-red-400'
+                    }`}
+                  >
+                    {v.size}: {v.stock}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span
+                className={`px-3 py-1 rounded-full text-xs ${
+                  (product.stock || 0) > 10
+                    ? 'bg-green-500/20 text-green-400'
+                    : (product.stock || 0) > 0
+                    ? 'bg-yellow-500/20 text-yellow-400'
+                    : 'bg-red-500/20 text-red-400'
+                }`}
+              >
+                {product.stock} in stock
+              </span>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => onEdit(product)}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600/20 text-blue-400 py-2 rounded-lg"
+            >
+              <Edit className="w-4 h-4" /> Edit
+            </button>
+            <button
+              onClick={() => onDelete(product.id!)}
+              className="flex-1 flex items-center justify-center gap-2 bg-red-600/20 text-red-400 py-2 rounded-lg"
+            >
+              <Trash2 className="w-4 h-4" /> Delete
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
