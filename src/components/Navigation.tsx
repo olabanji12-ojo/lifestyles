@@ -116,10 +116,12 @@ export default function Navigation({
 
   return (
     <>
-      {/* MAIN NAV — Fixed, pure white */}
+    
+ {/* MAIN NAV — Fixed, pure white, NO SHADOW */}
       <header
-        className={`fixed top-0 left-0 right-0 bg-white z-40 py-4 px-6 lg:px-12 flex justify-between items-center shadow-sm`}
-      >
+      className={`fixed top-0 left-0 right-0 bg-white z-40 py-4 px-6 lg:px-12 flex justify-between items-center border-b border-gray-100`}
+ >
+
         {/* Logo */}
         <Link to="/" className="text-3xl font-handwritten text-gray-900 z-10">
           Inspire

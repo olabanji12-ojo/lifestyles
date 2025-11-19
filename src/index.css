@@ -1,5 +1,6 @@
-/* ALWAYS FIRST */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+/* ALWAYS FIRST: Font Imports */
+/* Importing Caveat and the Inter sans-serif font */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;700&display=swap');
 
 /* Then Tailwind */
 @tailwind base;
@@ -7,7 +8,9 @@
 @tailwind utilities;
 
 /* Custom Font Class */
-.font-handwritten { font-family: 'Caveat', cursive; }
+.font-handwritten { 
+  font-family: 'Caveat', cursive; 
+}
 
 /* Base Layer */
 @layer base {
@@ -20,7 +23,14 @@
   }
 }
 
+/* Custom Utilities Layer */
 @layer utilities {
+  /* Utility for text readability over the full-bleed image */
+  .text-shadow-lg {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75); /* Dark shadow for light text */
+  }
+  
+  /* Your existing animation classes */
   .animate-fade-in {
     animation: fadeIn 1s ease-out forwards;
   }
@@ -54,7 +64,11 @@
   }
 }
 
-/* Your extra rules */
+/* ⚠️ CLEANUP OF EXTRA/REDUNDANT RULES ⚠️ */
+
+/* The following rules were causing conflicts or are redundant with modern Tailwind practice. 
+   I have removed or commented out unnecessary overrides, especially those relating to padding/margin. */
+
 html, body, #root {
   overflow-x: hidden;
   width: 100%;
@@ -62,33 +76,18 @@ html, body, #root {
   padding: 0;
 }
 
-main, .page-container {
-  padding-top: 90px;
-}
+/* This line is now redundant/counterproductive since the Navbar is FIXED and Hero starts at top: 0 */
+/* main, .page-container {
+  padding-top: 90px; 
+} */
 
-html, body, #root, .App {
-  overflow-x: hidden !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+/* This rule is invalid Tailwind syntax and has been removed */
+/* body, #root {
+  background-color: bg-gray-900/95;
+} */
 
 html, body {
   overscroll-behavior: none;
-}
-
-.min-h-screen {
-  overscroll-behavior: none;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
 }
 
 main {
@@ -97,9 +96,4 @@ main {
 
 footer {
   margin-top: 0;
-}
-
-/* ⚠️ THIS IS WRONG */
-body, #root {
-  background-color: bg-gray-900/95;
 }
