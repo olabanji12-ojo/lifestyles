@@ -1,92 +1,43 @@
+// src/components/Categories.jsx
+
 import CategorySection from './CategorySection';
 
 const categories = [
-  {
-    id: 'fashion',
-    title: 'FASHION',
-    items: ['Pants', 'Skirts', 'Kimonos', 'Kaftans', 'Shirts'],
-    image: '/silk2.jpg',
-    bgPosition: 'center right',
-  },
-  {
-    id: 'accessories',
-    title: 'ACCESSORIES',
-    items: ['Bags', 'Scarfs', 'Jewelry'],
-    image: '/white_jewelry1.jpg',
-    bgPosition: 'center',
-  },
-  {
-    id: 'gifts',
-    title: 'GIFTS',
-    items: ['Birthdays', 'Congratulations', 'Bridal Party', 'Wedding guests', 'Corporates'],
-    image: '/bowl1.webp',
-    bgPosition: 'center',
-  },
-  {
-    id: 'packaging',
-    title: 'PACKAGING',
-    items: ['Bundles', 'Boxes', 'Bags', 'Labels', 'Cards'],
-    image: '/box1.jpg',
-    bgPosition: 'center',
-  },
-
-  {
-    id: 'home',
-    title: 'HOME',
-    items: ['Sleep', 'Living', 'Eating'],
-    image: '/bed1.jpg',
-    bgPosition: 'center',
-  },
-  {
-    id: 'events',
-    title: 'EVENTS',
-    items: ['Invites', 'Menu Cards', 'Banners'],
-    image: '/silk3.jpg',
-    bgPosition: 'center left',
-  },
-  
-  {
-    id: 'colour',
-    title: 'SHOP BY COLOUR',
-    items: ['DARKS', 'BRIGHTS', 'NEUTRALS', 'LIGHTS'],
-    image: '/flower5.jpeg',
-    bgPosition: 'center',
-  },
-  {
-    id: 'function',
-    title: 'SHOP BY FUNCTION',
-    items: ['WORK', 'PLAY', 'FANCY', 'SLEEP', 'EAT'],
-    image: '/baloon.jpg',
-    bgPosition: 'center',
-  },
-  {
-    id: 'inspiration',
-    title: 'SHOP BY INSPIRATION',
-    items: ['Colour', 'Function', 'Inspiration'],
-    image: '/flower1.jpg',
-  },
+  // IMPORTANT: Ensure these image files are in your /public directory or adjust the path.
+  { id: 'fashion', title: 'FASHION', href: '/shop/fashion', image: '/Fashion_image.png', bgPosition: 'center right' },
+  { id: 'accessories', title: 'ACCESSORIES', href: '/shop/accessories', image: '/Accessories_image.png', bgPosition: 'center' },
+  { id: 'gifts', title: 'GIFTS', href: '/shop/gifts', image: '/Gifts_image.png', bgPosition: 'center' },
+  { id: 'packaging', title: 'PACKAGING', href: '/shop/packaging', image: '/Packaging_image.png', bgPosition: 'center' },
+  { id: 'home', title: 'HOME', href: '/shop/home', image: '/Home_image.png', bgPosition: 'center' },
+  { id: 'events', title: 'EVENTS', href: '/shop/events', image: '/Events_image.png', bgPosition: 'center left' },
 ];
 
 export default function Categories() {
   return (
-    <section className="bg-black" aria-labelledby="categories-title">
+    <section className="bg-white" aria-labelledby="categories-title">
       <h2
         id="categories-title"
-        className="font-serif text-4xl sm:text-5xl md:text-6xl text-center tracking-[0.15em] text-white pt-32 pb-24 px-6 font-light"
+        // Uses the custom handwritten font for a personalized header
+        className="font-handwritten text-5xl sm:text-6xl md:text-7xl text-gray-900 text-center tracking-normal pt-20 pb-16 px-6 font-light"
       >
-        SHOP BY CATEGORY
+        Shop Our Curated Collections
       </h2>
-
-      {categories.map((category) => {
-        const { bgPosition, ...props } = category;
-        return (
-          <CategorySection
-            key={category.id}
-            {...props}
-            bgPosition={bgPosition}
-          />
-        );
-      })}
+      
+      {/* Container for the category tiles: uses flex-wrap to stack items on small screens (w-full) 
+          and arranges them side-by-side on larger screens (md:w-1/2, lg:w-1/3) */}
+      <div className="flex flex-col md:flex-row md:flex-wrap">
+        {categories.map((category) => (
+          // This div dictates the width of the tile (100% on mobile, 50% on medium, 33.3% on large)
+          <div key={category.id} className="w-full md:w-1/2 lg:w-1/3"> 
+            <CategorySection
+              id={category.id}
+              title={category.title}
+              image={category.image}
+              bgPosition={category.bgPosition}
+            />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
