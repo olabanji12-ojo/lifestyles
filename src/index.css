@@ -1,7 +1,15 @@
+/* ALWAYS FIRST */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+
+/* Then Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Font Class */
+.font-handwritten { font-family: 'Caveat', cursive; }
+
+/* Base Layer */
 @layer base {
   body {
     @apply antialiased;
@@ -16,28 +24,25 @@
   .animate-fade-in {
     animation: fadeIn 1s ease-out forwards;
   }
-
   .animate-fade-in-delay-1 {
     animation: fadeIn 1s ease-out 0.2s forwards;
     opacity: 0;
   }
-
   .animate-fade-in-delay-2 {
     animation: fadeIn 1s ease-out 0.4s forwards;
     opacity: 0;
   }
-
   .animate-fade-in-delay-3 {
     animation: fadeIn 1s ease-out 0.6s forwards;
     opacity: 0;
   }
-
   .animate-fade-in-delay-4 {
     animation: fadeIn 1s ease-out 0.8s forwards;
     opacity: 0;
   }
 }
 
+/* Keyframes */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -49,8 +54,7 @@
   }
 }
 
-
-/* Prevent horizontal scroll FOREVER */
+/* Your extra rules */
 html, body, #root {
   overflow-x: hidden;
   width: 100%;
@@ -58,12 +62,10 @@ html, body, #root {
   padding: 0;
 }
 
-/* Make all pages respect nav height */
 main, .page-container {
-  padding-top: 90px; /* height of your nav */
+  padding-top: 90px;
 }
 
-/* KILL HORIZONTAL SCROLL FOREVER */
 html, body, #root, .App {
   overflow-x: hidden !important;
   width: 100% !important;
@@ -71,17 +73,14 @@ html, body, #root, .App {
   padding: 0 !important;
 }
 
-/* Add to your global CSS or component */
 html, body {
   overscroll-behavior: none;
 }
 
-/* Or if you want to be more specific */
 .min-h-screen {
   overscroll-behavior: none;
 }
 
-/* Ensure smooth scrolling behavior */
 html {
   scroll-behavior: smooth;
 }
@@ -92,15 +91,15 @@ body {
   overflow-x: hidden;
 }
 
-/* Make sure main content area handles all scrolling */
 main {
   min-height: 100vh;
 }
 
-/* Remove any extra space from footer */
 footer {
   margin-top: 0;
 }
+
+/* ⚠️ THIS IS WRONG */
 body, #root {
   background-color: bg-gray-900/95;
 }
