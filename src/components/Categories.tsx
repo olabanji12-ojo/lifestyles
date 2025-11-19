@@ -29,6 +29,7 @@ const categories = [
     image: '/box1.jpg',
     bgPosition: 'center',
   },
+
   {
     id: 'home',
     title: 'HOME',
@@ -43,6 +44,7 @@ const categories = [
     image: '/silk3.jpg',
     bgPosition: 'center left',
   },
+  
   {
     id: 'colour',
     title: 'SHOP BY COLOUR',
