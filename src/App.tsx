@@ -23,6 +23,8 @@ import Signup from './components/Signup'
 import { CartProvider } from './context/CartContext';
 import OrderConfirmation from './components/OrderConfirmation';
 import PaymentFailed from './components/PaymentFailed';
+import LifestyleCarousel from './components/LifestyleCarousel'
+
 
 // Home Page Component
 function HomePage() {
@@ -75,6 +77,8 @@ function App() {
   <Route path="/signup" element={<Signup />} />
   <Route path="/order-confirmation" element={<OrderConfirmation />} />
   <Route path="/payment-failed" element={<PaymentFailed />} />
+  <Route path="/payment-failed" element={<PaymentFailed />} />
+   
 
   {/* ADMIN ONLY — GUARDED */}
   <Route
@@ -113,6 +117,7 @@ function App() {
         </main>
         
         {/* Footer will naturally follow the content */}
+        <LifestyleCarousel />
         <Footer />
       </div>
     </Router>

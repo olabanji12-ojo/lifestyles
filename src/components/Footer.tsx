@@ -1,3 +1,5 @@
+// src/components/Footer.tsx (Using Deep Grey: bg-gray-900)
+
 import { Instagram, Facebook, Twitter } from 'lucide-react';
 import { useState, FormEvent } from 'react';
 
@@ -7,6 +9,8 @@ const navLinks = [
   { label: 'BE INSPIRED', href: '#inspired' },
   { label: 'ABOUT US', href: '#about' },
 ];
+
+const GOLD_COLOR = 'gold-500'; // Custom gold color
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -26,14 +30,15 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-black text-white pt-24 pb-16 px-6 mt-0" role="contentinfo">
+    // 🛑 CHANGE: Footer background changed from bg-black to bg-gray-900
+    <footer className="bg-gray-900 text-white pt-24 pb-16 px-6 mt-0" role="contentinfo">
       <div className="max-w-screen-lg mx-auto">
         <h2 
-          className="font-serif text-4xl sm:text-5xl tracking-[0.15em] text-center mb-10"
+          className={`font-handwritten text-6xl sm:text-7xl tracking-normal text-${GOLD_COLOR} text-center mb-10`}
           data-aos="fade-down"
           data-aos-duration="1000"
         >
-          INSPIRE
+          Inspire
         </h2>
 
         <nav aria-label="Footer navigation">
@@ -51,7 +56,7 @@ export default function Footer() {
               >
                 <a
                   href={link.href}
-                  className="text-xs tracking-[0.15em] text-gray-400 hover:text-yellow-600 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-600 rounded px-2 py-1"
+                  className={`text-xs tracking-[0.15em] text-gray-400 hover:text-${GOLD_COLOR} transition-colors focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR} rounded px-2 py-1`}
                 >
                   {link.label}
                 </a>
@@ -78,13 +83,14 @@ export default function Footer() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="ENTER YOUR EMAIL"
             required
-            className="w-full sm:w-auto bg-transparent border border-yellow-600 sm:border-r-0 px-6 py-4 text-sm tracking-[0.1em] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-600"
+            className={`w-full sm:w-auto bg-transparent border border-${GOLD_COLOR} sm:border-r-0 px-6 py-4 text-sm tracking-[0.1em] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR}`}
             disabled={isSubmitting}
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto bg-yellow-600 text-black px-8 py-4 text-xs tracking-[0.15em] font-bold hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50"
+            // Button still uses gold and text-black for high contrast
+            className={`w-full sm:w-auto bg-${GOLD_COLOR} text-black px-8 py-4 text-xs tracking-[0.15em] font-bold hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR} focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50`}
           >
             {isSubmitting ? 'SUBSCRIBING...' : 'SUBSCRIBE'}
           </button>
@@ -107,34 +113,34 @@ export default function Footer() {
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-600 rounded"
+            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 rounded"
             aria-label="Follow us on Instagram"
             data-aos="zoom-in"
             data-aos-delay="700"
           >
-            <Instagram className="w-6 h-6 text-yellow-600 hover:text-white transition-colors" />
+            <Instagram className={`w-6 h-6 text-${GOLD_COLOR} hover:text-white transition-colors`} />
           </a>
           <a
             href="https://facebook.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-600 rounded"
+            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 rounded"
             aria-label="Follow us on Facebook"
             data-aos="zoom-in"
             data-aos-delay="800"
           >
-            <Facebook className="w-6 h-6 text-yellow-600 hover:text-white transition-colors" />
+            <Facebook className={`w-6 h-6 text-${GOLD_COLOR} hover:text-white transition-colors`} />
           </a>
           <a
             href="https://twitter.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-600 rounded"
+            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 rounded"
             aria-label="Follow us on Twitter"
             data-aos="zoom-in"
             data-aos-delay="900"
           >
-            <Twitter className="w-6 h-6 text-yellow-600 hover:text-white transition-colors" />
+            <Twitter className={`w-6 h-6 text-${GOLD_COLOR} hover:text-white transition-colors`} />
           </a>
         </div>
 
