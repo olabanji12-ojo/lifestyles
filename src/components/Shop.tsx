@@ -343,14 +343,17 @@ export default function Shop() {
                   Showing {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''}
                 </p>
 
-                {/* Products */}
-                <div
-                  className={
-                    viewMode === 'grid'
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                      : 'flex flex-col gap-6'
-                  }
-                >
+      
+
+      <div
+            className={
+            viewMode === 'grid'
+            // UPDATED: Changed grid-cols-1 to grid-cols-2 for mobile
+            ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6'
+            : 'flex flex-col gap-6'
+            }
+      >
+
                   {sortedProducts.map((product, index) => (
                     <article
                       key={product.id}
