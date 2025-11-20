@@ -1,4 +1,4 @@
-// src/components/CategorySection.jsx
+// src/components/CategorySection.jsx (FINALIZED)
 
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -10,6 +10,8 @@ interface CategorySectionProps {
   title: string;
   image: string;
   bgPosition?: string;
+  // PROP CHANGE: Added linkHref to the interface
+  linkHref: string;
 }
 
 export default function CategorySection({
@@ -17,11 +19,13 @@ export default function CategorySection({
   title,
   image,
   bgPosition = 'center',
+  // PROP CHANGE: Destructured linkHref
+  linkHref,
 }: CategorySectionProps) {
   return (
     <Link 
-      // Link to the shop page with the category ID as a query parameter
-      to={`/shop?category=${id}`} 
+      // IMPLEMENTATION CHANGE: Using linkHref for the destination
+      to={linkHref} 
       className="relative h-[60vh] flex items-center justify-center overflow-hidden group transition-shadow duration-300 hover:shadow-2xl"
       aria-label={`Go to ${title} collection`}
     >

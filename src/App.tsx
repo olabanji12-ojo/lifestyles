@@ -24,7 +24,7 @@ import { CartProvider } from './context/CartContext';
 import OrderConfirmation from './components/OrderConfirmation';
 import PaymentFailed from './components/PaymentFailed';
 import LifestyleCarousel from './components/LifestyleCarousel'
-
+import CategoryDetail from './pages/CategoryDetail'
 
 // Home Page Component
 function HomePage() {
@@ -77,7 +77,7 @@ function App() {
   <Route path="/signup" element={<Signup />} />
   <Route path="/order-confirmation" element={<OrderConfirmation />} />
   <Route path="/payment-failed" element={<PaymentFailed />} />
-  <Route path="/payment-failed" element={<PaymentFailed />} />
+  <Route path="/category/:categoryId" element={<CategoryDetail />} />
    
 
   {/* ADMIN ONLY — GUARDED */}
