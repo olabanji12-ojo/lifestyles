@@ -40,23 +40,24 @@ export default function SubCategorySlider({ title, subId, products }: SubCategor
         >
           {products.map((product, index) => (
             <SwiperSlide key={index}>
-              <Link to={filterPath} className="block group">
-                <div className="relative overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  {/* Subtle Gold Border on hover */}
-                  <div className={`absolute inset-0 border-2 border-transparent group-hover:border-${GOLD_COLOR} transition-colors duration-300`}></div>
-                </div>
-                
-                {/* Product Info (Clean Sans-Serif) */}
-                <div className="text-center mt-4">
-                  <p className="font-sans-serif text-sm text-gray-900 tracking-wider uppercase">{product.name}</p>
-                  <p className={`font-sans-serif text-xs text-${GOLD_COLOR}`}>${product.price}</p>
-                </div>
-              </Link>
+              {/* 🎯 TARGETED CHANGE: Use product.id to link to the PDP */}
+    <Link to={`/product/${product.id}`} className="block group"> 
+              <div className="relative overflow-hidden">
+              <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              {/* Subtle Gold Border on hover */}
+              <div className={`absolute inset-0 border-2 border-transparent group-hover:border-${GOLD_COLOR} transition-colors duration-300`}></div>
+              </div>
+
+              {/* Product Info (Clean Sans-Serif) */}
+              <div className="text-center mt-4">
+              <p className="font-sans-serif text-sm text-gray-900 tracking-wider uppercase">{product.name}</p>
+              <p className={`font-sans-serif text-xs text-${GOLD_COLOR}`}>${product.price}</p>
+              </div>
+    </Link>
             </SwiperSlide>
           ))}
         </Swiper>

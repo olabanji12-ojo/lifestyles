@@ -25,7 +25,7 @@ import OrderConfirmation from './components/OrderConfirmation';
 import PaymentFailed from './components/PaymentFailed';
 import LifestyleCarousel from './components/LifestyleCarousel'
 import CategoryDetail from './components/CategoryDetail.tsx';
-
+import About from './components/About'
 
 // Home Page Component
 function HomePage() {
@@ -74,6 +74,8 @@ function App() {
   <Route path="/product/:id" element={<ProductDetail />} />
   <Route path="/cart" element={<Cart />} />
   <Route path="/checkout" element={<Checkout />} />
+  <Route path="/about" element={<About />} />
+
   <Route path="/login" element={<Login />} />
   <Route path="/signup" element={<Signup />} />
   <Route path="/order-confirmation" element={<OrderConfirmation />} />
