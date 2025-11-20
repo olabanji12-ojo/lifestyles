@@ -24,7 +24,8 @@ import { CartProvider } from './context/CartContext';
 import OrderConfirmation from './components/OrderConfirmation';
 import PaymentFailed from './components/PaymentFailed';
 import LifestyleCarousel from './components/LifestyleCarousel'
-import CategoryDetail from './pages/CategoryDetail'
+import CategoryDetail from './pages/CategoryDetail.tsx';
+
 
 // Home Page Component
 function HomePage() {
