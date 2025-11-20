@@ -24,7 +24,7 @@ import { CartProvider } from './context/CartContext';
 import OrderConfirmation from './components/OrderConfirmation';
 import PaymentFailed from './components/PaymentFailed';
 import LifestyleCarousel from './components/LifestyleCarousel'
-import CategoryDetail from './pages/CategoryDetail.tsx';
+import CategoryDetail from './components/CategoryDetail.tsx';
 
 
 // Home Page Component
