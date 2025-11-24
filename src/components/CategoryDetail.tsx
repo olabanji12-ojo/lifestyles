@@ -134,22 +134,33 @@ export default function CategoryDetail() {
             {/* A. Hero Header for the Category Page (uses local 'category') */}
             {/* ... */}
             
+           // src/pages/CategoryDetail.tsx (FIXED SUB-CATEGORY LOOP)
+
+{/* // ... inside return ( ... ) */}
+
             {/* B. Sub-Category Loop: */}
             <div className="w-full">
                 {category.subCategories.map((subCat) => {
                     if (!subCat.subId || !subCat.title) return null; 
 
-                    // This logic remains CORRECT because it matches the 'subCategory' product field
-                    const targetSubCategoryId = `${categoryId}-${subCat.subId}`;
-                    const sliderProducts = allProducts.filter(p => p.subCategory === targetSubCategoryId);
+                    // Define the two possible IDs the product might have:
+                    const fullSubId = `${categoryId}-${subCat.subId}`; // e.g., 'fashion-pants'
+                    const shortSubId = subCat.subId; // e.g., 'pants'
 
+                    // 🛑 FIX: Filter products based on EITHER the full ID OR the short ID
+                    const sliderProducts = allProducts.filter(p => 
+                        p.subCategory === fullSubId || p.subCategory === shortSubId
+                    );
+
+                    // If no products match the sub-category, hide the slider
                     if (sliderProducts.length === 0) return null; 
 
                     return (
                         <SubCategorySlider
                             key={subCat.subId}
                             title={subCat.title}
-                            subId={targetSubCategoryId}
+                            // Pass the full subId for routing consistency
+                            subId={fullSubId} 
                             products={sliderProducts}
                         />
                     );
