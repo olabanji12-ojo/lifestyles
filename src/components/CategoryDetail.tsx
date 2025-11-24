@@ -134,9 +134,8 @@ export default function CategoryDetail() {
             {/* A. Hero Header for the Category Page (uses local 'category') */}
             {/* ... */}
             
-           // src/pages/CategoryDetail.tsx (FIXED SUB-CATEGORY LOOP)
 
-{/* // ... inside return ( ... ) */}
+           {/* // ... inside return ( ... ) */}
 
             {/* B. Sub-Category Loop: */}
             <div className="w-full">
