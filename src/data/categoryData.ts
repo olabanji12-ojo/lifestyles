@@ -2,6 +2,7 @@
 
 // Define a structure for a product mock-up (for the slider content)
 export interface ProductMock {
+  id: string;
   name: string;
   image: string;
   price: number;

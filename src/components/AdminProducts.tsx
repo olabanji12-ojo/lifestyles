@@ -12,9 +12,15 @@ import {
   ProductVariant
 } from '../firebase/helpers';
 
+// 👇 IMPORT THE NEW SEEDING FUNCTION
+import { seedProductsToFirestore } from '../firebase/seedDatabase'; 
+
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  // 👇 ADD NEW STATE FOR SEEDING
+  const [seeding, setSeeding] = useState(false);
+  
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,13 +61,30 @@ export default function AdminProducts() {
     setLoading(true);
     const result = await getProducts();
     if (result.success) {
-  const validProducts = result.products.filter(p => p.name && typeof p.name === 'string');
-  setProducts(validProducts);
-} else {
+      const validProducts = result.products.filter(p => p.name && typeof p.name === 'string');
+      setProducts(validProducts);
+    } else {
       toast.error('Failed to load products');
     }
     setLoading(false);
   };
+
+  // 👇 NEW HANDLER FOR SEEDING MOCK DATA
+  const handleSeed = async () => {
+    if (!confirm('WARNING: Are you sure you want to seed the mock data? This will add many new products to your database.')) return;
+    
+    setSeeding(true);
+    const result = await seedProductsToFirestore();
+    
+    if (result.success) {
+      toast.success(`Seeded ${result.count} products! Refreshing list...`);
+      fetchProducts(); // Reload the product list from Firestore
+    } else {
+      toast.error('Seeding failed. Check console for details.');
+    }
+    setSeeding(false);
+  };
+
 
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,10 +230,10 @@ export default function AdminProducts() {
 
   // Filter products
   const filteredProducts = products.filter(p => {
-  const matchesSearch = (p.name ?? '').toLowerCase().includes(searchTerm.toLowerCase());
-  const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-  return matchesSearch && matchesCategory;
-});
+    const matchesSearch = (p.name ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   // Add/Remove variant
   const addVariant = () => {
@@ -239,15 +262,35 @@ export default function AdminProducts() {
   return (
     <div className="min-h-screen bg-black text-white pt-20">
       <div className="max-w-7xl mx-auto px-6 py-12">
+        
         {/* Header */}
+        {/* 👇 UPDATED HEADER WITH SEEDING BUTTON */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <h1 className="text-4xl font-serif">Manage Products</h1>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-yellow-600 text-black px-6 py-3 rounded-full hover:bg-yellow-500 transition font-semibold"
-          >
-            <Plus className="w-5 h-5" /> Add Product
-          </button>
+          <div className="flex flex-wrap gap-4">
+            
+            {/* TEMPORARY SEEDING BUTTON - DELETE AFTER USE */}
+            <button
+              onClick={handleSeed}
+              disabled={seeding || loading}
+              className="flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-full hover:bg-red-500 transition font-semibold disabled:opacity-50"
+            >
+              {seeding ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Plus className="w-5 h-5" />
+              )}
+              {seeding ? 'Seeding...' : 'SEED MOCK DATA'}
+            </button>
+            {/* END OF TEMPORARY BUTTON */}
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 bg-yellow-600 text-black px-6 py-3 rounded-full hover:bg-yellow-500 transition font-semibold"
+            >
+              <Plus className="w-5 h-5" /> Add Product
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -275,116 +318,116 @@ export default function AdminProducts() {
         </div>
 
         {/* PRODUCTS LIST – RESPONSIVE */}
-{loading ? (
-  <div className="flex justify-center items-center h-64">
-    <Loader2 className="w-12 h-12 animate-spin text-yellow-600" />
-  </div>
-) : (
-  <>
-    {/* Desktop table (hidden on mobile) */}
-    <div className="hidden md:block bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-white/10">
-          <tr>
-            <th className="px-6 py-4 text-left">Product</th>
-            <th className="px-6 py-4 text-left">Category</th>
-            <th className="px-6 py-4 text-left">Price</th>
-            <th className="px-6 py-4 text-left">Stock</th>
-            <th className="px-6 py-4 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredProducts.map((p) => (
-            <tr key={p.id} className="border-t border-white/10 hover:bg-white/5">
-              <td className="px-6 py-4">
-                <div className="flex items-center gap-4">
-                  {p.images?.[0] ? (
-                    <img
-                      src={p.images[0]}
-                      alt={p.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-white/10 rounded-lg" />
-                  )}
-                  <div>
-                    <p className="font-medium">{p.name}</p>
-                    <p className="text-sm text-gray-400">{p.slug}</p>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 text-gray-300">{p.category}</td>
-              <td className="px-6 py-4 font-bold text-yellow-600">
-                {p.hasVariants ? (
-                  <span className="text-sm">
-                    From ₦{Math.min(...(p.variants?.map((v) => v.price) || [0])).toLocaleString()}
-                  </span>
-                ) : (
-                  `₦${p.price?.toLocaleString() || 0}`
-                )}
-              </td>
-              <td className="px-6 py-4">
-                {p.hasVariants ? (
-                  <div className="text-xs space-y-1">
-                    {p.variants?.map((v, i) => (
-                      <div
-                        key={i}
-                        className={`px-2 py-1 rounded ${
-                          v.stock > 10
-                            ? 'bg-green-500/20 text-green-400'
-                            : v.stock > 0
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
-                      >
-                        {v.size}: {v.stock}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs ${
-                      (p.stock || 0) > 10
-                        ? 'bg-green-500/20 text-green-400'
-                        : (p.stock || 0) > 0
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-red-500/20 text-red-400'
-                    }`}
-                  >
-                    {p.stock} in stock
-                  </span>
-                )}
-              </td>
-              <td className="px-6 py-4">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => openEditModal(p)}
-                    className="text-blue-400 hover:text-blue-300"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(p.id!)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="w-12 h-12 animate-spin text-yellow-600" />
+          </div>
+        ) : (
+          <>
+            {/* Desktop table (hidden on mobile) */}
+            <div className="hidden md:block bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-white/10">
+                  <tr>
+                    <th className="px-6 py-4 text-left">Product</th>
+                    <th className="px-6 py-4 text-left">Category</th>
+                    <th className="px-6 py-4 text-left">Price</th>
+                    <th className="px-6 py-4 text-left">Stock</th>
+                    <th className="px-6 py-4 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((p) => (
+                    <tr key={p.id} className="border-t border-white/10 hover:bg-white/5">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          {p.images?.[0] ? (
+                            <img
+                              src={p.images[0]}
+                              alt={p.name}
+                              className="w-16 h-16 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-white/10 rounded-lg" />
+                          )}
+                          <div>
+                            <p className="font-medium">{p.name}</p>
+                            <p className="text-sm text-gray-400">{p.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-300">{p.category}</td>
+                      <td className="px-6 py-4 font-bold text-yellow-600">
+                        {p.hasVariants ? (
+                          <span className="text-sm">
+                            From ₦{Math.min(...(p.variants?.map((v) => v.price) || [0])).toLocaleString()}
+                          </span>
+                        ) : (
+                          `₦${p.price?.toLocaleString() || 0}`
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {p.hasVariants ? (
+                          <div className="text-xs space-y-1">
+                            {p.variants?.map((v, i) => (
+                              <div
+                                key={i}
+                                className={`px-2 py-1 rounded ${
+                                  v.stock > 10
+                                    ? 'bg-green-500/20 text-green-400'
+                                    : v.stock > 0
+                                    ? 'bg-yellow-500/20 text-yellow-400'
+                                    : 'bg-red-500/20 text-red-400'
+                                }`}
+                              >
+                                {v.size}: {v.stock}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs ${
+                              (p.stock || 0) > 10
+                                ? 'bg-green-500/20 text-green-400'
+                                : (p.stock || 0) > 0
+                                ? 'bg-yellow-500/20 text-yellow-400'
+                                : 'bg-red-500/20 text-red-400'
+                            }`}
+                          >
+                            {p.stock} in stock
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => openEditModal(p)}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id!)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-    {/* Mobile cards (hidden on desktop) */}
-    <div className="md:hidden space-y-4">
-      {filteredProducts.map((p) => (
-        <ProductCard key={p.id} product={p} onEdit={openEditModal} onDelete={handleDelete} />
-      ))}
-    </div>
-  </>
-)}
+            {/* Mobile cards (hidden on desktop) */}
+            <div className="md:hidden space-y-4">
+              {filteredProducts.map((p) => (
+                <ProductCard key={p.id} product={p} onEdit={openEditModal} onDelete={handleDelete} />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Add/Edit Modal */}
         {showModal && (

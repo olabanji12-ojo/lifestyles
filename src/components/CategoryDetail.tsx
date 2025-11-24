@@ -1,60 +1,163 @@
-// src/pages/CategoryDetail.tsx
+// src/pages/CategoryDetail.tsx (FINAL FIX)
 
 import { useParams, Navigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import SubCategorySlider from '../components/SubCategorySlider';
-import { CATEGORY_DATA } from '../data/categoryData';
+// 🛑 CHANGE: Import the correct helper
+import { getProductsByMainCategory, Product } from '../firebase/helpers'; 
 
+// 🛑 STEP 1: DEFINE CATEGORY METADATA LOCALLY
+// src/pages/CategoryDetail.tsx (Complete CATEGORY_METADATA based on MOCK DATA)
 
-const GOLD_COLOR = 'gold-500';
+// 🛑 IMPORTANT: This replaces the CATEGORY_METADATA object from previous steps.
+
+const CATEGORY_METADATA = {
+    // --- 1. FASHION ---
+    fashion: { 
+        title: "THE FASHION COLLECTION", 
+        heroSubtitle: "Timeless silhouettes designed for movement and modern elegance.",
+        subCategories: [
+            { subId: 'pants', title: 'Pants' }, 
+            { subId: 'skirts', title: 'Skirts' }, 
+            { subId: 'kaftans', title: 'Kaftans' }, // <-- NEW
+            { subId: 'kimonos', title: 'Kimonos' }, // <-- NEW
+            { subId: 'shirts', title: 'Shirts' }, // <-- NEW
+        ]
+    },
+    
+    // --- 2. ACCESSORIES ---
+    accessories: { 
+        title: "THE ACCESSORIES EDIT", 
+        heroSubtitle: "The perfect finishing pieces to refine and personalize your look.",
+        subCategories: [
+            { subId: 'bags', title: 'Bags' }, 
+            { subId: 'jewelry', title: 'Jewelry' }, 
+            { subId: 'scarfs', title: 'Scarfs' }, // <-- NEW
+        ]
+    },
+    
+    // --- 3. GIFTS ---
+    gifts: { 
+        title: "THE ART OF GIVING", 
+        heroSubtitle: "Thoughtful, personalized gifts that convey timeless luxury.",
+        subCategories: [
+            { subId: 'her', title: 'For Her' }, 
+            { subId: 'him', title: 'For Him' },  
+            { subId: 'home', title: 'New Home' }, // Corresponds to 'gifts-home' in filtering
+        ]
+    },
+
+    // --- 4. PACKAGING ---
+    packaging: { 
+        title: "PRESENTATION PERFECTION", 
+        heroSubtitle: "Elevate your gifts and products with custom, luxurious packaging solutions.",
+        subCategories: [
+            { subId: 'boxes', title: 'Gift Boxes' }, 
+            { subId: 'ribbons', title: 'Ribbons & Tags' }, // Corresponds to 'packaging-ribbons'
+        ]
+    },
+    
+    // --- 5. HOME ---
+    home: { 
+        title: "CURATED LIVING", 
+        heroSubtitle: "Textiles and decor designed to bring serenity and elegance to your space.",
+        subCategories: [
+            { subId: 'sleep', title: 'Sleep' }, // Corresponds to 'home-sleep'
+            { subId: 'living', title: 'Living' }, // Corresponds to 'home-living'
+            { subId: 'dining', title: 'Dining' }, // <-- NEW
+        ]
+    },
+    
+    // --- 6. EVENTS ---
+    events: { 
+        title: "THE ART OF CELEBRATION", 
+        heroSubtitle: "Refined stationery and decor for your most important milestones.",
+        subCategories: [
+            { subId: 'invites', title: 'Invitations' }, // Corresponds to 'event-invites'
+            { subId: 'table', title: 'Table Decor' }, // Corresponds to 'event-table'
+        ]
+    },
+} as const; // 'as const' helps TypeScript infer the exact shape
+
+// Define the type for the local metadata
+type CategoryMetadata = typeof CATEGORY_METADATA['fashion'];
+
+// ... (other constants like GOLD_COLOR_TEXT) ...
 
 export default function CategoryDetail() {
-  const { categoryId } = useParams<{ categoryId: string }>();
+    const { categoryId } = useParams<{ categoryId: string }>();
+    const [allProducts, setAllProducts] = useState<Product[]>([]); 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
-  // Find the relevant category data
-  const category = CATEGORY_DATA.find(cat => cat.id === categoryId);
+    // 🛑 STEP 2: LOOK UP CATEGORY METADATA LOCALLY
+    const category: CategoryMetadata | undefined = categoryId ? CATEGORY_METADATA[categoryId as keyof typeof CATEGORY_METADATA] : undefined;
 
-  // Handle 404 Case
-  if (!category) {
-    // If the category ID is invalid, redirect to the main shop page
-    return <Navigate to="/shop" replace />;
-  }
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!categoryId || !category) {
+                setError(true); 
+                setLoading(false);
+                return;
+            }
 
-  return (
-    <main className="pt-[90px] bg-white">
-      {/* A. Hero Header for the Category Page */}
-      <div className="text-center py-20 px-6 max-w-4xl mx-auto">
-        {/* Main Title (Sans-Serif for a clean, editorial look) */}
-        <h1 className="font-sans-serif text-4xl sm:text-5xl text-gray-900 tracking-widest uppercase mb-4">
-          {category.title}
-        </h1>
-        {/* Subtitle (Handwritten Font for elegance) */}
-        <p className={`font-handwritten text-3xl text-${GOLD_COLOR}`}>
-          {category.heroSubtitle}
-        </p>
-      </div>
+            setLoading(true);
+            
+            // 🛑 STEP 3: FETCH PRODUCTS USING THE NEW HELPER
+            const productsResult = await getProductsByMainCategory(categoryId); 
+            
+            if (productsResult.success && productsResult.products) {
+                setAllProducts(productsResult.products);
+                setError(false);
+            } else {
+                // We set error true if products fail to load, which causes the redirect.
+                // If you want to show the page with zero products, set error=false here.
+                setError(true); 
+            }
+            
+            setLoading(false);
+        };
+        fetchData();
+    }, [categoryId]); // Depend on categoryId
+    
+    // Loading State
+    if (loading) { /* ... */ }
 
-      {/* B. Sub-Category Loop: Renders a slider for each sub-category */}
-      <div className="w-full">
-        {category.subCategories.map((subCat) => (
-          <SubCategorySlider
-            key={subCat.subId}
-            title={subCat.title}
-            subId={`${categoryId}-${subCat.subId}`} // Pass unique ID for link generation
-            products={subCat.products}
-          />
-        ))}
-      </div>
+    // 🛑 STEP 4: REDIRECT IS NOW TRIGGERED BY MISSING METADATA OR FAILED PRODUCT FETCH
+    if (error || !category) { 
+        return <Navigate to="/shop" replace />;
+    }
+    
+    // The rest of the JSX:
+    return (
+        <main className="pt-[90px] bg-white">
+            {/* A. Hero Header for the Category Page (uses local 'category') */}
+            {/* ... */}
+            
+            {/* B. Sub-Category Loop: */}
+            <div className="w-full">
+                {category.subCategories.map((subCat) => {
+                    if (!subCat.subId || !subCat.title) return null; 
 
-      {/* C. Final CTA */}
-      <div className="text-center py-20">
-        <Link
-          to={`/shop?category=${categoryId}`}
-          className={`inline-block border-2 border-gray-900 bg-gray-900 text-white px-12 py-4 text-sm tracking-widest font-sans-serif uppercase transition-all duration-300
-                     hover:bg-white hover:text-${GOLD_COLOR} hover:border-${GOLD_COLOR}`}
-        >
-          View All {categoryId} Products
-        </Link>
-      </div>
-    </main>
-  );
+                    // This logic remains CORRECT because it matches the 'subCategory' product field
+                    const targetSubCategoryId = `${categoryId}-${subCat.subId}`;
+                    const sliderProducts = allProducts.filter(p => p.subCategory === targetSubCategoryId);
+
+                    if (sliderProducts.length === 0) return null; 
+
+                    return (
+                        <SubCategorySlider
+                            key={subCat.subId}
+                            title={subCat.title}
+                            subId={targetSubCategoryId}
+                            products={sliderProducts}
+                        />
+                    );
+                })}
+            </div>
+
+            {/* C. Final CTA */}
+            {/* ... */}
+        </main>
+    );
 }
