@@ -56,18 +56,18 @@ export default function LifestyleCarousel() {
   return (
     <section className="bg-white py-20 lg:py-32" aria-labelledby="lifestyle-carousel-title">
       <div className="max-w-7xl mx-auto px-6">
-        
+
         {/* Section Header */}
         <div className="text-center mb-12 lg:mb-16">
-          <h2 id="lifestyle-carousel-title" 
-              className="font-handwritten text-5xl sm:text-6xl text-gray-900 mb-4">
+          <h2 id="lifestyle-carousel-title"
+            className="font-handwritten text-5xl sm:text-6xl text-gray-900 mb-4">
             #InspireYourLife
           </h2>
           <p className="font-sans-serif text-lg text-gray-700 max-w-2xl mx-auto">
-            Discover how our community styles and celebrates with Inspire. 
+            Discover how our community styles and celebrates with Inspire.
             Tag us to be featured!
           </p>
-          <Link to="/gallery" className="inline-block mt-6 px-8 py-3 border-2 border-gray-900 bg-gray-900 text-white text-sm tracking-widest uppercase transition-all duration-300 hover:bg-white hover:text-gold-500 hover:border-gold-500">
+          <Link to="/beinspired" className="inline-block mt-6 px-8 py-3 border-2 border-gray-900 bg-gray-900 text-white text-sm tracking-widest uppercase transition-all duration-300 hover:bg-white hover:text-gold-500 hover:border-gold-500">
             View Our Gallery
           </Link>
         </div>
@@ -83,10 +83,10 @@ export default function LifestyleCarousel() {
             delay: 4000, // 4 seconds delay
             disableOnInteraction: false, // Keep autoplaying even after user interaction
           }}
-          pagination={{ 
-            clickable: true, 
+          pagination={{
+            clickable: true,
             dynamicBullets: true // A nice visual effect for pagination
-          }} 
+          }}
           breakpoints={{
             // When window width is >= 768px (md)
             768: {

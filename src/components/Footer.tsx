@@ -2,12 +2,13 @@
 
 import { Instagram, Facebook, Twitter } from 'lucide-react';
 import { useState, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 const navLinks = [
-  { label: 'SHOP', href: '#shop' },
-  { label: 'PERSONALISE', href: '#personalise' },
-  { label: 'BE INSPIRED', href: '#inspired' },
-  { label: 'ABOUT US', href: '#about' },
+  { label: 'SHOP', href: '/shop' },
+  { label: 'PERSONALISE', href: '/personalize' },
+  { label: 'BE INSPIRED', href: '/beinspired' },
+  { label: 'ABOUT US', href: '/about' },
 ];
 
 const GOLD_COLOR = 'gold-500'; // Custom gold color
@@ -33,7 +34,7 @@ export default function Footer() {
     // 🛑 CHANGE: Footer background changed from bg-black to bg-gray-900
     <footer className="bg-gray-900 text-white pt-24 pb-16 px-6 mt-0" role="contentinfo">
       <div className="max-w-screen-lg mx-auto">
-        <h2 
+        <h2
           className={`font-handwritten text-6xl sm:text-7xl tracking-normal text-${GOLD_COLOR} text-center mb-10`}
           data-aos="fade-down"
           data-aos-duration="1000"
@@ -42,24 +43,24 @@ export default function Footer() {
         </h2>
 
         <nav aria-label="Footer navigation">
-          <ul 
+          <ul
             className="flex flex-wrap justify-center gap-8 sm:gap-12 my-12"
             data-aos="fade-up"
             data-aos-delay="200"
             data-aos-duration="800"
           >
             {navLinks.map((link, index) => (
-              <li 
+              <li
                 key={link.label}
                 data-aos="fade-up"
                 data-aos-delay={300 + (index * 100)}
               >
-                <a
-                  href={link.href}
+                <Link
+                  to={link.href}
                   className={`text-xs tracking-[0.15em] text-gray-400 hover:text-${GOLD_COLOR} transition-colors focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR} rounded px-2 py-1`}
                 >
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -102,9 +103,9 @@ export default function Footer() {
           </p>
         )}
 
-        <div 
-          className="flex justify-center gap-8 my-12" 
-          role="navigation" 
+        <div
+          className="flex justify-center gap-8 my-12"
+          role="navigation"
           aria-label="Social media"
           data-aos="fade-up"
           data-aos-delay="600"
@@ -144,7 +145,7 @@ export default function Footer() {
           </a>
         </div>
 
-        <p 
+        <p
           className="text-center text-xs tracking-[0.1em] text-gray-600 mt-16"
           data-aos="fade-up"
           data-aos-delay="1000"
