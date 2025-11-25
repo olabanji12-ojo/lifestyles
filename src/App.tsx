@@ -6,7 +6,8 @@ import Navigation from './components/Navigation';
 import Hero from './components/Hero';
 import Categories from './components/Categories';
 import Footer from './components/Footer';
-import Shop from './pages/Shop';
+import Shop from './components/Shop'
+// import Shop from './pages/Shop';
 import Personalize from './pages/Personalize'
 import Beinspired from './pages/Beinspired'
 import ProductDetail from './pages/ProductDetail';
