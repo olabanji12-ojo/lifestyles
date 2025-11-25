@@ -13,10 +13,10 @@ import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import Login from './components/Login';
-import Dashboard from './pages/Dashboard'
-import AdminProducts from './pages/AdminProducts'
-import AdminOrders from './pages/AdminOrders'
-import AdminRequests from './pages/AdminRequests'
+import Dashboard from './components/Dashboard'
+import AdminProducts from './components/AdminProducts'
+import AdminOrders from './components/AdminOrders'
+import AdminRequests from './components/AdminRequests'
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Signup from './components/Signup'
