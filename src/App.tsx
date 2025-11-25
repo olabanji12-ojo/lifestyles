@@ -6,26 +6,26 @@ import Navigation from './components/Navigation';
 import Hero from './components/Hero';
 import Categories from './components/Categories';
 import Footer from './components/Footer';
-import Shop from './pages/Shop';
-import Personalize from './pages/Personalize'
-import Beinspired from './pages/Beinspired'
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Login from './pages/Login';
+import Shop from './components/Shop';
+import Personalize from './components/Personalize'
+import Beinspired from './components/Beinspired'
+import ProductDetail from './components/ProductDetail';
+import Cart from './components/Cart';
+import Checkout from './components/Checkout';
+import Login from './components/Login';
 import Dashboard from './pages/Dashboard'
 import AdminProducts from './pages/AdminProducts'
 import AdminOrders from './pages/AdminOrders'
 import AdminRequests from './pages/AdminRequests'
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import Signup from './pages/Signup'
+import Signup from './components/Signup'
 import { CartProvider } from './context/CartContext';
-import OrderConfirmation from './pages/OrderConfirmation';
-import PaymentFailed from './pages/PaymentFailed';
+import OrderConfirmation from './components/OrderConfirmation';
+import PaymentFailed from './components/PaymentFailed';
 import LifestyleCarousel from './components/LifestyleCarousel'
-import CategoryDetail from './pages/CategoryDetail';
-import About from './pages/About'
+import CategoryDetail from './components/CategoryDetail';
+import About from './components/About'
 
 // Home Page Component
 function HomePage() {
