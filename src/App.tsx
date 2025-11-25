@@ -24,7 +24,7 @@ import { CartProvider } from './context/CartContext';
 import OrderConfirmation from './pages/OrderConfirmation';
 import PaymentFailed from './pages/PaymentFailed';
 import LifestyleCarousel from './components/LifestyleCarousel'
-import CategoryDetail from './pages/CategoryDetail.tsx';
+import CategoryDetail from './pages/CategoryDetail';
 import About from './pages/About'
 
 // Home Page Component
@@ -71,6 +71,7 @@ function App() {
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/personalize" element={<Personalize />} />
                 <Route path="/inspired" element={<Beinspired />} />
+                <Route path="/beinspired" element={<Beinspired />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
