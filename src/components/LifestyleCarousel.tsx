@@ -24,31 +24,31 @@ const carouselItems: CarouselItem[] = [
     id: 'lifestyle1',
     image: '/lifestyle-carousel-1.png', // ACTION: Replace with your generated image paths
     alt: 'Woman wearing a stylish scarf from Inspire',
-    link: '/shop/accessories?product=silk-scarf-collection',
+    link: '/inspired',
   },
   {
     id: 'lifestyle2',
     image: '/lifestyle-carousel-2.png',
     alt: 'Elegant personalized journal on a desk',
-    link: '/personalize?product=elegant-journal',
+    link: '/inspired',
   },
   {
     id: 'lifestyle3',
     image: '/lifestyle-carousel-3.png',
     alt: 'Luxury gift box arrangement for a special occasion',
-    link: '/shop/gifts?product=luxury-gift-set',
+    link: '/inspired',
   },
   {
     id: 'lifestyle4',
     image: '/lifestyle-carousel-4.png',
     alt: 'Minimalist bedroom featuring Inspire home decor',
-    link: '/shop/home?product=linen-bedding-set',
+    link: '/inspired',
   },
   {
     id: 'lifestyle5',
     image: '/lifestyle-carousel-5.png',
     alt: 'Flat lay of a beautifully set table with Inspire items',
-    link: '/shop/events?product=tableware-collection',
+    link: '/inspired',
   },
 ];
 
@@ -67,7 +67,7 @@ export default function LifestyleCarousel() {
             Discover how our community styles and celebrates with Inspire.
             Tag us to be featured!
           </p>
-          <Link to="/beinspired" className="inline-block mt-6 px-8 py-3 border-2 border-gray-900 bg-gray-900 text-white text-sm tracking-widest uppercase transition-all duration-300 hover:bg-white hover:text-gold-500 hover:border-gold-500">
+          <Link to="/inspired" className="inline-block mt-6 px-8 py-3 border-2 border-gray-900 bg-gray-900 text-white text-sm tracking-widest uppercase transition-all duration-300 hover:bg-white hover:text-gold-500 hover:border-gold-500">
             View Our Gallery
           </Link>
         </div>

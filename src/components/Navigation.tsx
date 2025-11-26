@@ -61,12 +61,12 @@ export default function Navigation({
   setMobileMenuOpen,
 }: NavigationProps) {
   const { cartCount } = useCart();
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const navigate = useNavigate();
-  
+
   // State for Desktop Dropdowns
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  
+
   // State for Mobile Accordion
   const [mobileOpenCategory, setMobileOpenCategory] = useState<string | null>(null);
 
@@ -104,7 +104,7 @@ export default function Navigation({
   const toggleMobileCategory = (label: string) => {
     setMobileOpenCategory(mobileOpenCategory === label ? null : label);
   };
-  
+
   // Clean up the timer when the component unmounts
   useEffect(() => {
     return () => {
@@ -116,11 +116,11 @@ export default function Navigation({
 
   return (
     <>
-    
- {/* MAIN NAV — Fixed, pure white, NO SHADOW */}
+
+      {/* MAIN NAV — Fixed, pure white, NO SHADOW */}
       <header
-      className={`fixed top-0 left-0 right-0 bg-white z-40 py-4 px-6 lg:px-12 flex justify-between items-center border-b border-gray-100`}
- >
+        className={`fixed top-0 left-0 right-0 bg-white z-40 py-4 px-6 lg:px-12 flex justify-between items-center border-b border-gray-100`}
+      >
 
         {/* Logo */}
         <Link to="/" className="text-3xl font-handwritten text-gray-900 z-10">
@@ -130,8 +130,8 @@ export default function Navigation({
         {/* Desktop Nav - Shows only on large screens (1024px+) */}
         <nav className="hidden lg:flex gap-8 items-center">
           {menuItems.map((item) => (
-            <div 
-              key={item.label} 
+            <div
+              key={item.label}
               className="relative group"
               // *** FIX: Use the new delayed handlers here ***
               onMouseEnter={() => "subs" in item && handleMouseEnter(item.label)}
@@ -149,9 +149,9 @@ export default function Navigation({
 
                   {/* Dropdown — stays open when hovering over it */}
                   {openDropdown === item.label && (
-                    <div 
+                    <div
                       className="absolute top-full left-0 mt-2 bg-white shadow-lg rounded-sm py-2 w-48 z-50"
-                      // NOTE: We don't need onMouseEnter/onMouseLeave here anymore, the parent div handles the state
+                    // NOTE: We don't need onMouseEnter/onMouseLeave here anymore, the parent div handles the state
                     >
                       {item.subs!.map((sub) => (
                         <Link
@@ -177,9 +177,9 @@ export default function Navigation({
             </div>
           ))}
         </nav>
-        
+
         {/* ... (Rest of the Navigation component, including right-side icons and mobile menu, is unchanged from the previous fixed version) ... */}
-        
+
         {/* Right side - Shows only on large screens */}
         <div className="hidden lg:flex items-center gap-6">
           <Link to="/cart" className="relative">
@@ -190,6 +190,16 @@ export default function Navigation({
               </span>
             )}
           </Link>
+
+          {/* Admin Dashboard Link - Only visible to admins */}
+          {role === 'admin' && (
+            <Link
+              to="/dashboard"
+              className="text-sm tracking-widest text-gray-900 hover:text-yellow-600 transition"
+            >
+              DASHBOARD
+            </Link>
+          )}
 
           {currentUser ? (
             <button
@@ -248,13 +258,12 @@ export default function Navigation({
                     className="text-4xl font-handwritten text-gray-900 hover:text-gray-600 transition flex items-center gap-2"
                   >
                     {item.label}
-                    <ChevronDown 
-                      className={`w-6 h-6 transition-transform ${
-                        mobileOpenCategory === item.label ? 'rotate-180' : ''
-                      }`} 
+                    <ChevronDown
+                      className={`w-6 h-6 transition-transform ${mobileOpenCategory === item.label ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
-                  
+
                   {/* Subcategories - Only show when clicked */}
                   {mobileOpenCategory === item.label && (
                     <div className="flex flex-col items-center gap-2 mt-2">

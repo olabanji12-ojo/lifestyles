@@ -16,11 +16,9 @@ export default function Cart() {
   const { currentUser } = useAuth();
   const { cart, cartTotal, updateQuantity, removeFromCart, loading } = useCart();
 
-  // Calculate costs
+  // Calculate costs - NO SHIPPING OR TAX
   const subtotal = cartTotal;
-  const shipping = subtotal > 50000 ? 0 : 2000;
-  const tax = Math.round(subtotal * 0.075); // 7.5% VAT
-  const orderTotal = subtotal + shipping + tax;
+  const orderTotal = subtotal; // Total is just the subtotal
 
   // Get item price (handle variants)
   const getItemPrice = (item: any) => {
@@ -114,14 +112,14 @@ export default function Cart() {
                     >
                       {item.name}
                     </Link>
-                    
+
                     {/* Variant info */}
                     {item.variant && (
                       <p className="text-gray-500 text-sm mt-1">
                         Size: {item.variant.size}
                       </p>
                     )}
-                    
+
                     <p className="text-gray-500 text-sm mt-1">
                       ₦{getItemPrice(item).toLocaleString()} each
                     </p>
@@ -183,21 +181,7 @@ export default function Cart() {
                     <span>Subtotal ({cart.length} {cart.length === 1 ? 'item' : 'items'})</span>
                     <span>₦{subtotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span className={shipping === 0 ? 'text-green-500 font-semibold' : ''}>
-                      {shipping === 0 ? 'Free' : `₦${shipping.toLocaleString()}`}
-                    </span>
-                  </div>
-                  {shipping === 0 && (
-                    <p className="text-xs text-green-600">
-                      🎉 You qualify for free shipping!
-                    </p>
-                  )}
-                  <div className="flex justify-between">
-                    <span>Tax (7.5% VAT)</span>
-                    <span>₦{tax.toLocaleString()}</span>
-                  </div>
+                  {/* Shipping and Tax removed as requested */}
                 </div>
 
                 <div className="flex justify-between text-gray-800 text-2xl font-bold my-6 pt-6 border-t border-gray-200">

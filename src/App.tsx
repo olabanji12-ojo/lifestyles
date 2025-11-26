@@ -55,9 +55,8 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Router>
-          {/* Remove flex and min-h-screen from parent, use simple structure */}
           <div className="relative">
-        // After:
+            {/* Navigation */}
             <Navigation
               mobileMenuOpen={mobileMenuOpen}
               setMobileMenuOpen={setMobileMenuOpen}
