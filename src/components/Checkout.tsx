@@ -136,7 +136,10 @@ export default function Checkout() {
     const customerUid = currentUser ? currentUser.uid : null;
 
     try {
-      console.log('📞 Calling backend to prepare order...');
+      // SECURITY: Only log in development
+      if (import.meta.env.DEV) {
+        console.log('📞 Calling backend to prepare order...');
+      }
 
       // Step 1: Call YOUR backend to prepare order
       const initRes = await fetch('/api/initializePaystack', {
@@ -165,7 +168,10 @@ export default function Checkout() {
 
       const { reference, orderId, amount, email } = await initRes.json();
 
-      console.log('✅ Order prepared:', { reference, orderId, amount });
+      // SECURITY: Only log in development
+      if (import.meta.env.DEV) {
+        console.log('✅ Order prepared:', { reference, orderId, amount });
+      }
 
       // Step 2: Open Paystack popup
       const paystack = new Paystack();
@@ -178,26 +184,37 @@ export default function Checkout() {
         ref: reference,
 
         onSuccess: async (transaction: any) => {
-          console.log('✅ Payment successful:', transaction.reference);
+          // SECURITY: NEVER trust client-side success callback
+          // Only use it to get the reference, then verify server-side
+
+          if (import.meta.env.DEV) {
+            console.log('💳 Payment popup closed with reference:', transaction.reference);
+          }
+
+          // Show verifying state (don't show success yet!)
           setCurrentStep(3);
 
           try {
-            // Step 3: Verify payment with YOUR backend
+            // CRITICAL: Verify payment with YOUR backend
+            // Backend will call Paystack API with SECRET KEY
             const verifyRes = await fetch('/api/verifyPaystack', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 reference: transaction.reference,
-                // START OF GUEST CHECKOUT CHANGE 4: Pass customerUid (null for guest)
-                uid: customerUid, // Will be null for guests. Backend must handle this.
-                // END OF GUEST CHECKOUT CHANGE 4
+                uid: customerUid, // For customer verification
               }),
             });
 
             const verifyData = await verifyRes.json();
 
-            if (verifyData.verified) {
-              console.log('✅ Payment verified');
+            // SECURITY: Only proceed if SERVER confirms payment via Paystack API
+            if (verifyData.verified && verifyData.paystackStatus === 'success') {
+              if (import.meta.env.DEV) {
+                console.log('✅ Payment verified by server');
+              }
+
+              // NOW it's safe to clear cart and redirect
               await clearCart();
 
               setTimeout(() => {
@@ -206,16 +223,19 @@ export default function Checkout() {
                     reference: transaction.reference,
                     orderId: verifyData.orderId,
                     amount: amount / 100, // Convert back to Naira for display
-                    // You might want to pass a flag here: isGuest: !customerUid
+                    isGuest: !customerUid,
                   },
                 });
               }, 1500);
             } else {
-              throw new Error('Payment verification failed');
+              // Server verification failed
+              throw new Error(verifyData.error || 'Payment verification failed');
             }
-          } catch (error) {
-            console.error('❌ Verification error:', error);
-            toast.error('Payment verification failed. Please contact support.');
+          } catch (error: any) {
+            if (import.meta.env.DEV) {
+              console.error('❌ Verification error:', error);
+            }
+            toast.error('Payment verification failed. Please contact support with reference: ' + transaction.reference);
             navigate('/payment-failed', {
               state: { reference: transaction.reference },
             });
@@ -226,14 +246,18 @@ export default function Checkout() {
         },
 
         onCancel: () => {
-          console.log('⚠️ Payment cancelled by user');
+          if (import.meta.env.DEV) {
+            console.log('⚠️ Payment cancelled by user');
+          }
           setProcessingPayment(false);
           setLoading(false);
           toast.error('Payment cancelled');
         },
 
         onError: (error: any) => {
-          console.error('❌ Payment error:', error);
+          if (import.meta.env.DEV) {
+            console.error('❌ Payment error:', error);
+          }
           setProcessingPayment(false);
           setLoading(false);
           toast.error('Payment failed. Please try again.');
@@ -241,7 +265,10 @@ export default function Checkout() {
       });
 
     } catch (error: any) {
-      console.error('❌ Checkout error:', error);
+      if (import.meta.env.DEV) {
+        console.error('❌ Checkout error:', error);
+      }
+      // SECURITY: Don't expose internal error details to users
       toast.error(error.message || 'Failed to process payment');
       setProcessingPayment(false);
       setLoading(false);

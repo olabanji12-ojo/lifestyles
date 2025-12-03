@@ -1,9 +1,8 @@
-// api/initializePaystack.js
-import crypto from 'node:crypto';
+// api/verifyPaystack.js
 import { getAdmin } from './_firebaseAdmin.js';
 
 export const config = {
-  runtime: "nodejs",
+  runtime: 'nodejs',
 };
 
 function json(res, status, body) {
@@ -24,120 +23,130 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed' });
   }
 
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) {
+    console.error('❌ Missing PAYSTACK_SECRET_KEY in Vercel environment');
+    return json(res, 500, { error: 'Server configuration error' });
+  }
+
   try {
-    const { uid, email, shippingAddress, customerInfo } = req.body || {};
+    const { reference, uid } = req.body || {};
 
-    // GUEST CHECKOUT CHANGE 1: Allow null uid, but email is MANDATORY for both
-    if (!email) {
-      return json(res, 400, { error: 'Missing email' });
+    if (!reference) {
+      return json(res, 400, { error: 'Missing payment reference' });
     }
-    
-    // Determine the cart and order identifier
-    // For logged-in users, use uid. For guests, use email.
-    const customerId = uid || email; 
 
-    console.log('📦 Preparing order for customer:', customerId);
+    console.log('🔍 Verifying payment:', reference);
+
+    // CRITICAL: Verify payment with Paystack API using SECRET KEY
+    // Never trust client-side success callback
+    const paystackRes = await fetch(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${secret}`,
+        },
+      }
+    );
+
+    if (!paystackRes.ok) {
+      console.error('❌ Paystack API error:', paystackRes.status);
+      return json(res, 400, {
+        verified: false,
+        error: 'Payment verification failed'
+      });
+    }
+
+    const paystackData = await paystackRes.json();
+
+    // Check if Paystack confirms the payment was successful
+    if (!paystackData.status || paystackData.data.status !== 'success') {
+      console.error('❌ Payment not successful:', paystackData.data.status);
+      return json(res, 400, {
+        verified: false,
+        error: 'Payment not successful',
+        paystackStatus: paystackData.data.status
+      });
+    }
 
     const { db } = getAdmin();
 
-    // Step 1: Cancel any pending orders for this user/email
-    console.log('🔍 Checking for existing pending orders...');
-    
-    // GUEST CHECKOUT CHANGE 2: Check by customerId for logged-in, or customerEmail for guests/both
-    const existingOrders = await db.collection('orders')
-      .where(uid ? 'customerId' : 'customerEmail', '==', customerId)
-      .where('status', '==', 'Pending')
+    // Find the order by payment reference
+    const ordersSnapshot = await db.collection('orders')
+      .where('paymentRef', '==', reference)
+      .limit(1)
       .get();
 
-    if (!existingOrders.empty) {
-      console.log(`⚠️ Found ${existingOrders.size} pending orders. Marking as abandoned...`);
-      const batch = db.batch();
-      existingOrders.docs.forEach(doc => {
-        batch.update(doc.ref, {
-          status: 'Abandoned',
-          updatedAt: new Date(),
-          abandonedReason: 'User started new checkout session',
-        });
+    if (ordersSnapshot.empty) {
+      console.error('❌ Order not found for reference:', reference);
+      return json(res, 404, {
+        verified: false,
+        error: 'Order not found'
       });
-      await batch.commit();
-      console.log('✅ Old pending orders marked as abandoned');
     }
 
-    // Step 2: Load cart from Firestore
-    // GUEST CHECKOUT CHANGE 3: Use customerId (uid or email) to find the cart
-    const cartDoc = await db.collection('carts').doc(customerId).get();
-    
-    if (!cartDoc.exists) {
-      return json(res, 400, { error: 'Cart is empty or not found' });
+    const orderDoc = ordersSnapshot.docs[0];
+    const orderData = orderDoc.data();
+
+    // SECURITY: Verify the amount matches
+    const paystackAmountKobo = paystackData.data.amount; // Amount in kobo
+    const orderAmountKobo = Math.round(orderData.total * 100); // Convert Naira to kobo
+
+    if (paystackAmountKobo !== orderAmountKobo) {
+      console.error('❌ Amount mismatch!', {
+        paystack: paystackAmountKobo,
+        order: orderAmountKobo
+      });
+      return json(res, 400, {
+        verified: false,
+        error: 'Payment amount mismatch'
+      });
     }
 
-    const cartData = cartDoc.data();
-    const items = cartData.items || [];
-
-    if (!items.length) {
-      return json(res, 400, { error: 'Cart is empty' });
+    // SECURITY: Verify customer (if logged in)
+    if (uid && orderData.customerId && orderData.customerId !== uid) {
+      console.error('❌ Customer ID mismatch');
+      return json(res, 403, {
+        verified: false,
+        error: 'Unauthorized'
+      });
     }
 
-    // Step 3: Calculate total amount
-    const amountNaira = items.reduce((sum, item) => {
-      const itemPrice = item.variant ? item.variant.price : item.price;
-      return sum + (itemPrice * item.quantity);
-    }, 0);
+    // Check if order was already processed (idempotency)
+    if (orderData.status === 'Packed' || orderData.paymentStatus === 'paid') {
+      console.log('⚠️ Order already processed:', orderDoc.id);
+      return json(res, 200, {
+        verified: true,
+        orderId: orderDoc.id,
+        alreadyProcessed: true,
+        paystackStatus: 'success'
+      });
+    }
 
-    const amountKobo = Math.round(amountNaira * 100);
-
-    console.log('💰 Total amount:', amountNaira, 'NGN (', amountKobo, 'kobo)');
-
-    // Step 4: Generate UNIQUE reference
-    const timestamp = Date.now();
-    const randomHex = crypto.randomBytes(8).toString('hex');
-    const randomAlpha = Math.random().toString(36).substring(2, 9);
-    
-    // GUEST CHECKOUT CHANGE 4: Adjust reference to handle null uid gracefully
-    const refIdentifier = uid ? uid.slice(0, 8) : 'GUEST'; 
-    const reference = `inspire_${refIdentifier}_${timestamp}_${randomHex}_${randomAlpha}`;
-
-    console.log('🆔 Generated unique reference:', reference);
-
-    // Step 5: Create pending order in Firestore
-    const orderRef = db.collection('orders').doc();
-    const orderId = orderRef.id;
-
-    const orderData = {
-      orderId: reference,
-      // GUEST CHECKOUT CHANGE 5: customerId is null for guests, customerEmail is always set
-      customerId: uid || null, 
-      customerName: customerInfo?.fullName || '',
-      customerEmail: email,
-      customerPhone: customerInfo?.phone || '',
-      items: items.map(({ productId, name, price, quantity, variant, image }) => ({
-        productId,
-        productName: name,
-        quantity,
-        price: variant ? variant.price : price,
-        variant: variant ? { size: variant.size, price: variant.price } : null,
-        image: image || '',
-      })),
-      total: amountNaira,
-      status: 'Pending',
-      shippingAddress: shippingAddress || '',
-      paymentRef: reference,
-      createdAt: new Date(),
+    // Update order status to Packed (paid and ready for fulfillment)
+    await orderDoc.ref.update({
+      status: 'Packed',
+      paymentStatus: 'paid',
+      paidAt: new Date(),
+      payment: paystackData.data,
       updatedAt: new Date(),
-    };
+    });
 
-    await orderRef.set(orderData);
-    console.log('✅ Order created in Firestore:', orderId);
+    console.log('✅ Payment verified and order updated:', orderDoc.id);
 
-    return json(res, 200, { 
-      reference, 
-      orderId,
-      amount: amountKobo,
-      email,
+    return json(res, 200, {
+      verified: true,
+      orderId: orderDoc.id,
+      paystackStatus: 'success',
+      amount: orderData.total
     });
 
   } catch (error) {
-    console.error('❌ Initialize error:', error);
-    return json(res, 500, { error: 'Server error', details: error.message });
+    console.error('❌ Verification error:', error);
+    return json(res, 500, {
+      verified: false,
+      error: 'Server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
