@@ -33,6 +33,36 @@ const colors = [
   { id: 'Neutral', label: 'Neutral' },
 ];
 
+const ProductSkeleton: React.FC<{ viewMode: 'grid' | 'list' }> = ({ viewMode }) => {
+    if (viewMode === 'list') {
+        // List mode skeleton is generally less necessary as the full page is usually loading, 
+        // but for completeness, we can return the grid version which is simpler to implement.
+        // For this context, we will focus on the more complex grid view where multiple items load at once.
+    }
+    
+    // Grid View Skeleton
+    return (
+        <div className="group relative bg-white rounded-lg overflow-hidden shadow animate-pulse">
+            {/* Image Skeleton */}
+            <div className="block aspect-square bg-gray-200 overflow-hidden">
+                <div className="w-full h-full bg-gray-300"></div>
+            </div>
+
+            {/* Info Skeleton */}
+            <div className="p-4">
+                {/* Product Name Skeleton */}
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-3"></div>
+                
+                {/* Price Skeleton */}
+                <div className="h-6 bg-gray-300 rounded w-1/2 mb-4"></div>
+                
+                {/* Button Skeleton */}
+                <div className="w-full h-10 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+    );
+}
+// --- END OF NEW COMPONENT: ProductSkeleton ---
 // Helper component for the filter content, extracted for reuse in desktop and mobile drawer
 interface FilterContentProps {
     searchQuery: string;

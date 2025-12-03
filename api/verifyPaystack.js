@@ -1,4 +1,5 @@
-// api/verifyPaystack.js
+// api/initializePaystack.js
+import crypto from 'node:crypto';
 import { getAdmin } from './_firebaseAdmin.js';
 
 export const config = {
@@ -15,7 +16,6 @@ function json(res, status, body) {
 }
 
 export default async function handler(req, res) {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return json(res, 200, { ok: true });
   }
@@ -24,128 +24,120 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed' });
   }
 
-  const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-
-  if (!PAYSTACK_SECRET_KEY) {
-    return json(res, 500, { error: 'Missing PAYSTACK_SECRET_KEY' });
-  }
-
   try {
-    const { reference, uid } = req.body || {};
+    const { uid, email, shippingAddress, customerInfo } = req.body || {};
 
-    if (!reference || !uid) {
-      return json(res, 400, { error: 'Missing reference or uid' });
+    // GUEST CHECKOUT CHANGE 1: Allow null uid, but email is MANDATORY for both
+    if (!email) {
+      return json(res, 400, { error: 'Missing email' });
     }
+    
+    // Determine the cart and order identifier
+    // For logged-in users, use uid. For guests, use email.
+    const customerId = uid || email; 
 
-    console.log('🔍 Verifying payment:', reference);
-
-    // Step 1: Verify payment with Paystack API
-    const verifyRes = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        },
-      }
-    );
-
-    const verifyData = await verifyRes.json();
-
-    if (!verifyRes.ok || !verifyData.status) {
-      console.error('❌ Paystack verification failed:', verifyData);
-      return json(res, 400, {
-        verified: false,
-        message: 'Payment verification failed',
-        details: verifyData,
-      });
-    }
-
-    const paymentStatus = verifyData.data.status;
-
-    if (paymentStatus !== 'success') {
-      console.error('❌ Payment not successful:', paymentStatus);
-      return json(res, 400, {
-        verified: false,
-        message: `Payment status: ${paymentStatus}`,
-      });
-    }
-
-    console.log('✅ Payment verified successfully');
+    console.log('📦 Preparing order for customer:', customerId);
 
     const { db } = getAdmin();
 
-    // Step 2: Update order status to "Paid"
-    const ordersSnapshot = await db.collection('orders')
-      .where('paymentRef', '==', reference)
-      .limit(1)
+    // Step 1: Cancel any pending orders for this user/email
+    console.log('🔍 Checking for existing pending orders...');
+    
+    // GUEST CHECKOUT CHANGE 2: Check by customerId for logged-in, or customerEmail for guests/both
+    const existingOrders = await db.collection('orders')
+      .where(uid ? 'customerId' : 'customerEmail', '==', customerId)
+      .where('status', '==', 'Pending')
       .get();
 
-    if (ordersSnapshot.empty) {
-      console.error('❌ Order not found for reference:', reference);
-      return json(res, 404, { verified: false, message: 'Order not found' });
+    if (!existingOrders.empty) {
+      console.log(`⚠️ Found ${existingOrders.size} pending orders. Marking as abandoned...`);
+      const batch = db.batch();
+      existingOrders.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          status: 'Abandoned',
+          updatedAt: new Date(),
+          abandonedReason: 'User started new checkout session',
+        });
+      });
+      await batch.commit();
+      console.log('✅ Old pending orders marked as abandoned');
     }
 
-    const orderDoc = ordersSnapshot.docs[0];
-    const orderData = orderDoc.data();
+    // Step 2: Load cart from Firestore
+    // GUEST CHECKOUT CHANGE 3: Use customerId (uid or email) to find the cart
+    const cartDoc = await db.collection('carts').doc(customerId).get();
+    
+    if (!cartDoc.exists) {
+      return json(res, 400, { error: 'Cart is empty or not found' });
+    }
 
-    // Step 3: Update order
-    await orderDoc.ref.update({
-      status: 'Packed', // Move to next stage after payment
-      paymentStatus: 'paid',
-      paidAt: new Date(),
+    const cartData = cartDoc.data();
+    const items = cartData.items || [];
+
+    if (!items.length) {
+      return json(res, 400, { error: 'Cart is empty' });
+    }
+
+    // Step 3: Calculate total amount
+    const amountNaira = items.reduce((sum, item) => {
+      const itemPrice = item.variant ? item.variant.price : item.price;
+      return sum + (itemPrice * item.quantity);
+    }, 0);
+
+    const amountKobo = Math.round(amountNaira * 100);
+
+    console.log('💰 Total amount:', amountNaira, 'NGN (', amountKobo, 'kobo)');
+
+    // Step 4: Generate UNIQUE reference
+    const timestamp = Date.now();
+    const randomHex = crypto.randomBytes(8).toString('hex');
+    const randomAlpha = Math.random().toString(36).substring(2, 9);
+    
+    // GUEST CHECKOUT CHANGE 4: Adjust reference to handle null uid gracefully
+    const refIdentifier = uid ? uid.slice(0, 8) : 'GUEST'; 
+    const reference = `inspire_${refIdentifier}_${timestamp}_${randomHex}_${randomAlpha}`;
+
+    console.log('🆔 Generated unique reference:', reference);
+
+    // Step 5: Create pending order in Firestore
+    const orderRef = db.collection('orders').doc();
+    const orderId = orderRef.id;
+
+    const orderData = {
+      orderId: reference,
+      // GUEST CHECKOUT CHANGE 5: customerId is null for guests, customerEmail is always set
+      customerId: uid || null, 
+      customerName: customerInfo?.fullName || '',
+      customerEmail: email,
+      customerPhone: customerInfo?.phone || '',
+      items: items.map(({ productId, name, price, quantity, variant, image }) => ({
+        productId,
+        productName: name,
+        quantity,
+        price: variant ? variant.price : price,
+        variant: variant ? { size: variant.size, price: variant.price } : null,
+        image: image || '',
+      })),
+      total: amountNaira,
+      status: 'Pending',
+      shippingAddress: shippingAddress || '',
+      paymentRef: reference,
+      createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    };
 
-    console.log('✅ Order updated to Packed');
+    await orderRef.set(orderData);
+    console.log('✅ Order created in Firestore:', orderId);
 
-    // Step 4: Reduce product stock
-    const batch = db.batch();
-
-    for (const item of orderData.items) {
-      const productRef = db.collection('products').doc(item.productId);
-      const productSnap = await productRef.get();
-
-      if (productSnap.exists) {
-        const productData = productSnap.data();
-
-        // Handle variants
-        if (item.variant && productData.hasVariants && productData.variants) {
-          const updatedVariants = productData.variants.map(v => {
-            if (v.size === item.variant.size) {
-              return { ...v, stock: Math.max(v.stock - item.quantity, 0) };
-            }
-            return v;
-          });
-          batch.update(productRef, { variants: updatedVariants });
-        } else {
-          // Regular product (no variants)
-          const newStock = Math.max((productData.stock || 0) - item.quantity, 0);
-          batch.update(productRef, { stock: newStock });
-        }
-      }
-    }
-
-    await batch.commit();
-    console.log('✅ Product stock updated');
-
-    // Step 5: Clear user's cart
-    const cartRef = db.collection('carts').doc(uid);
-    await cartRef.delete();
-    console.log('✅ Cart cleared');
-
-    return json(res, 200, {
-      verified: true,
-      message: 'Payment verified successfully',
-      orderId: orderDoc.id,
-      reference,
+    return json(res, 200, { 
+      reference, 
+      orderId,
+      amount: amountKobo,
+      email,
     });
 
   } catch (error) {
-    console.error('❌ Verification error:', error);
-    return json(res, 500, {
-      verified: false,
-      error: 'Server error',
-      details: error.message,
-    });
+    console.error('❌ Initialize error:', error);
+    return json(res, 500, { error: 'Server error', details: error.message });
   }
 }

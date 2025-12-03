@@ -39,17 +39,21 @@ export default function Checkout() {
 
   // Calculate totals
   const subtotal = cartTotal;
-  const shipping = subtotal > 50000 ? 0 : 2000;
-  const tax = Math.round(subtotal * 0.075); // 7.5% VAT
-  const orderTotal = subtotal + shipping + tax;
+  const shipping = 0; // SHIPPING REMOVED
+  const tax = 0;      // TAX REMOVED
+  const orderTotal = subtotal; // Order total is now just the subtotal
 
-  // Redirect if not logged in
+  // START OF GUEST CHECKOUT CHANGE 1: REMOVE MANDATORY REDIRECT
+  /*
+  // Redirect if not logged in - **REMOVED TO ENABLE GUEST CHECKOUT**
   useEffect(() => {
     if (!currentUser) {
       toast.error('Please sign in to checkout');
       navigate('/login?redirect=/checkout');
     }
   }, [currentUser, navigate]);
+  */
+  // END OF GUEST CHECKOUT CHANGE 1
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -61,6 +65,7 @@ export default function Checkout() {
 
   // Pre-fill form with user data
   useEffect(() => {
+    // This hook still works to pre-fill the form if a user *is* logged in
     if (currentUser) {
       setFormData(prev => ({
         ...prev,
@@ -106,8 +111,6 @@ export default function Checkout() {
   };
 
   // Handle Paystack Payment
-  // Key section to update in your Checkout.tsx
-
   const handlePayment = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -116,32 +119,42 @@ export default function Checkout() {
       return;
     }
 
+    // START OF GUEST CHECKOUT CHANGE 2: Remove mandatory sign-in check
+    /*
     if (!currentUser) {
       toast.error('Please sign in to continue');
       navigate('/login?redirect=/checkout');
       return;
     }
+    */
+    // END OF GUEST CHECKOUT CHANGE 2
 
     setProcessingPayment(true);
     setLoading(true);
 
+    // Determine the UID to send to the backend. It will be null for guests.
+    const customerUid = currentUser ? currentUser.uid : null;
+
     try {
       console.log('📞 Calling backend to prepare order...');
 
-      // Step 1: Call YOUR backend to prepare order (NOT Paystack yet!)
+      // Step 1: Call YOUR backend to prepare order
       const initRes = await fetch('/api/initializePaystack', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uid: currentUser.uid,
+          // START OF GUEST CHECKOUT CHANGE 3: Pass customerUid (null for guest)
+          uid: customerUid, // Will be null for guests. Backend must handle this.
+          // END OF GUEST CHECKOUT CHANGE 3
           email: formData.email,
           shippingAddress: `${formData.streetAddress}, ${formData.city}, ${formData.state}`,
           customerInfo: {
             fullName: `${formData.firstName} ${formData.lastName}`,
             phone: formData.phone,
           },
+          // IMPORTANT: Assuming the backend correctly uses the cartTotal or recalculates it.
         }),
       });
 
@@ -154,7 +167,7 @@ export default function Checkout() {
 
       console.log('✅ Order prepared:', { reference, orderId, amount });
 
-      // Step 2: Open Paystack popup (THIS is where Paystack transaction is created)
+      // Step 2: Open Paystack popup
       const paystack = new Paystack();
 
       paystack.newTransaction({
@@ -175,7 +188,9 @@ export default function Checkout() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 reference: transaction.reference,
-                uid: currentUser.uid,
+                // START OF GUEST CHECKOUT CHANGE 4: Pass customerUid (null for guest)
+                uid: customerUid, // Will be null for guests. Backend must handle this.
+                // END OF GUEST CHECKOUT CHANGE 4
               }),
             });
 
@@ -191,6 +206,7 @@ export default function Checkout() {
                     reference: transaction.reference,
                     orderId: verifyData.orderId,
                     amount: amount / 100, // Convert back to Naira for display
+                    // You might want to pass a flag here: isGuest: !customerUid
                   },
                 });
               }, 1500);
@@ -242,6 +258,9 @@ export default function Checkout() {
     return getItemPrice(item) * item.quantity;
   };
 
+  // START OF GUEST CHECKOUT CHANGE 5: REMOVE FINAL AUTH CHECK/LOADING SCREEN
+  // This check is no longer needed since the component can now render for guests
+  /*
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] pt-20 flex items-center justify-center">
@@ -249,6 +268,8 @@ export default function Checkout() {
       </div>
     );
   }
+  */
+  // END OF GUEST CHECKOUT CHANGE 5
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] pt-20">
@@ -300,7 +321,7 @@ export default function Checkout() {
           <div className="lg:col-span-2">
             {currentStep === 1 && (
               <form onSubmit={handleContinueToPayment} className="space-y-8" data-aos="fade-right">
-                {/* Error Summary Banner */}
+                {/* Error Summary Banner (omitted for brevity) */}
                 {Object.keys(errors).length > 0 && (
                   <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded" role="alert">
                     <div className="flex items-start">
@@ -325,11 +346,11 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* Shipping Address */}
+                {/* Shipping Address (omitted for brevity) */}
                 <div className="bg-white shadow-md rounded-lg p-6">
                   <h3 className="text-gray-900 text-xl font-semibold mb-6">Shipping Address</h3>
 
-                  {/* Contact Info */}
+                  {/* Contact Info (omitted for brevity) */}
                   <div className="mb-6">
                     <h4 className="text-gray-900 text-sm font-semibold mb-4">Contact Information</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -364,7 +385,7 @@ export default function Checkout() {
                     </div>
                   </div>
 
-                  {/* Delivery Address */}
+                  {/* Delivery Address (omitted for brevity) */}
                   <div>
                     <h4 className="text-gray-900 text-sm font-semibold mb-4">Delivery Address</h4>
                     <div className="space-y-4">
@@ -484,6 +505,7 @@ export default function Checkout() {
                         PROCESSING...
                       </>
                     ) : (
+                      // UPDATED: Payment button reflects the new orderTotal (which is just the subtotal)
                       <>PAY ₦{orderTotal.toLocaleString()}</>
                     )}
                   </button>
@@ -502,7 +524,7 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Processing Step */}
+            {/* Processing Step (omitted for brevity) */}
             {currentStep === 3 && (
               <div className="text-center py-12" data-aos="zoom-in">
                 <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
@@ -548,16 +570,6 @@ export default function Checkout() {
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span>₦{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
-                  <span className={shipping === 0 ? 'text-green-600' : ''}>
-                    {shipping === 0 ? 'Free' : `₦${shipping.toLocaleString()}`}
-                  </span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Tax (7.5%)</span>
-                  <span>₦{tax.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-gray-900 text-xl font-bold pt-3 border-t border-gray-200">
                   <span>Order Total</span>
