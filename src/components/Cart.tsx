@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { CartItem } from '../context/CartContext'; // Import CartItem type if available in CartContext
 
 const paymentMethods = [
   { name: 'Visa', logo: 'Visa' },
@@ -21,13 +22,29 @@ export default function Cart() {
   const orderTotal = subtotal; // Total is just the subtotal
 
   // Get item price (handle variants)
-  const getItemPrice = (item: any) => {
+  const getItemPrice = (item: CartItem) => {
     return item.variant ? item.variant.price : item.price;
   };
 
   // Get item total
-  const getItemTotal = (item: any) => {
+  const getItemTotal = (item: CartItem) => {
     return getItemPrice(item) * item.quantity;
+  };
+
+  /**
+   * Enhanced handler for removing an item with confirmation.
+   * @param itemId The unique ID of the item in the cart.
+   * @param itemName The name of the product for the confirmation message.
+   */
+  const handleRemoveItem = (itemId: string, itemName: string) => {
+    // Show a native browser confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to remove "${itemName}" from your cart?`
+    );
+
+    if (confirmed) {
+      removeFromCart(itemId);
+    }
   };
 
   // Handle checkout
@@ -124,10 +141,21 @@ export default function Cart() {
                       ₦{getItemPrice(item).toLocaleString()} each
                     </p>
 
-                    {/* Stock warning */}
-                    {item.stock < 5 && item.stock > 0 && (
-                      <p className="text-orange-500 text-xs mt-2">
-                        Only {item.stock} left in stock
+                    {/* Stock warning with better visual feedback */}
+                    {item.stock === 0 ? (
+                      <p className="text-red-600 text-sm font-semibold mt-2 flex items-center gap-1">
+                        ⚠️ Out of stock
+                      </p>
+                    ) : item.stock < 5 ? (
+                      <p className="text-orange-500 text-sm font-semibold mt-2 flex items-center gap-1">
+                        ⚡ Only {item.stock} left in stock!
+                      </p>
+                    ) : null}
+
+                    {/* Quantity exceeds stock warning */}
+                    {item.quantity > item.stock && (
+                      <p className="text-red-600 text-xs font-bold mt-1 bg-red-50 px-2 py-1 rounded">
+                        ❌ Quantity exceeds available stock ({item.stock} available)
                       </p>
                     )}
 
@@ -152,7 +180,8 @@ export default function Cart() {
                         <Plus className="w-4 h-4 text-gray-700" />
                       </button>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        // UPDATED: Call the new confirmation handler
+                        onClick={() => handleRemoveItem(item.id, item.name)}
                         className="ml-auto p-2 text-gray-400 hover:text-red-500 transition-colors"
                         aria-label="Remove item"
                       >
@@ -192,10 +221,17 @@ export default function Cart() {
                 {/* Checkout Button */}
                 <button
                   onClick={handleCheckout}
-                  className="w-full bg-yellow-600 text-black py-4 font-bold rounded hover:bg-yellow-500 transition-colors mb-4"
+                  disabled={cart.some(item => item.quantity > item.stock || item.stock === 0)}
+                  className="w-full bg-yellow-600 text-black py-4 font-bold rounded hover:bg-yellow-500 transition-colors mb-4 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {currentUser ? 'PROCEED TO CHECKOUT' : 'SIGN IN TO CHECKOUT'}
                 </button>
+
+                {cart.some(item => item.quantity > item.stock || item.stock === 0) && (
+                  <p className="text-red-600 text-xs text-center mb-4 font-semibold">
+                    ⚠️ Please adjust quantities or remove out-of-stock items to proceed
+                  </p>
+                )}
 
                 {!currentUser && (
                   <p className="text-xs text-gray-500 text-center mb-4">

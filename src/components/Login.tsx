@@ -149,6 +149,17 @@ export default function Login() {
               required
             />
           </div>
+           <div className="text-right mb-4">
+            <button 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                alert('Password reset feature coming soon!'); 
+              }} 
+              className="text-[#F4C430] hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
 
           <button
             type="submit"

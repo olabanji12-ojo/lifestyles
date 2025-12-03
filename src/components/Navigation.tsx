@@ -249,17 +249,17 @@ export default function Navigation({
             <X className="w-8 h-8 text-gray-900" />
           </button>
 
-          <nav className="flex flex-col gap-6 items-center w-full max-w-md mt-12">
+          <nav className="flex flex-col gap-4 items-center w-full max-w-md mt-12">
             {menuItems.map((item) =>
               "subs" in item ? (
-                <div key={item.label} className="flex flex-col items-center gap-3 w-full">
+                <div key={item.label} className="flex flex-col items-center gap-2 w-full">
                   <button
                     onClick={() => toggleMobileCategory(item.label)}
-                    className="text-4xl font-handwritten text-gray-900 hover:text-gray-600 transition flex items-center gap-2"
+                    className="text-2xl font-handwritten text-gray-900 hover:text-gray-600 transition flex items-center gap-2"
                   >
                     {item.label}
                     <ChevronDown
-                      className={`w-6 h-6 transition-transform ${mobileOpenCategory === item.label ? 'rotate-180' : ''
+                      className={`w-5 h-5 transition-transform ${mobileOpenCategory === item.label ? 'rotate-180' : ''
                         }`}
                     />
                   </button>
@@ -275,7 +275,7 @@ export default function Navigation({
                             setMobileMenuOpen(false);
                             setMobileOpenCategory(null);
                           }}
-                          className="block text-lg text-gray-600 hover:text-gray-900 transition"
+                          className="block text-base text-gray-600 hover:text-gray-900 transition"
                         >
                           {sub.name}
                         </Link>
@@ -288,11 +288,25 @@ export default function Navigation({
                   key={item.label}
                   to={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-4xl font-handwritten text-gray-900 hover:text-gray-600 transition"
+                  className="text-2xl font-handwritten text-gray-900 hover:text-gray-600 transition"
                 >
                   {item.label}
                 </Link>
               )
+            )}
+
+            {/* Visual Separator */}
+            <div className="w-full border-t border-gray-300 my-4" />
+
+            {/* Admin Dashboard Link - Only visible to admins */}
+            {role === 'admin' && (
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-xl tracking-widest text-yellow-600 hover:text-yellow-700 transition font-bold"
+              >
+                DASHBOARD
+              </Link>
             )}
 
             {currentUser ? (
@@ -301,7 +315,7 @@ export default function Navigation({
                   handleLogout(navigate);
                   setMobileMenuOpen(false);
                 }}
-                className="text-4xl font-handwritten text-gray-900 hover:text-gray-600 transition mt-4"
+                className="text-xl tracking-widest text-gray-900 hover:text-gray-600 transition font-semibold"
               >
                 LOGOUT
               </button>
@@ -309,7 +323,7 @@ export default function Navigation({
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-4xl font-handwritten text-gray-900 hover:text-gray-600 transition mt-4"
+                className="text-xl tracking-widest text-gray-900 hover:text-gray-600 transition font-semibold"
               >
                 LOGIN
               </Link>

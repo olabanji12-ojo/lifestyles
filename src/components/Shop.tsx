@@ -1,7 +1,7 @@
 // src/pages/Shop.tsx
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Grid, List, X, Loader2, ShoppingBag } from 'lucide-react';
+import { Search, Grid, List, X, Loader2, ShoppingBag, SlidersHorizontal } from 'lucide-react'; // Added SlidersHorizontal for the filter button
 import { getProducts, Product } from '../firebase/helpers';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
@@ -33,6 +33,106 @@ const colors = [
   { id: 'Neutral', label: 'Neutral' },
 ];
 
+// Helper component for the filter content, extracted for reuse in desktop and mobile drawer
+interface FilterContentProps {
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    categories: typeof categories;
+    selectedCategories: string[];
+    toggleFilter: (type: 'category' | 'function' | 'color', id: string) => void;
+    functions: typeof functions;
+    selectedFunctions: string[];
+    colors: typeof colors;
+    selectedColors: string[];
+    priceRange: [number, number];
+    maxPriceLimit: number;
+    setPriceRange: (range: [number, number]) => void;
+}
+
+const FilterContent: React.FC<FilterContentProps> = ({
+    searchQuery,
+    setSearchQuery,
+    categories,
+    selectedCategories,
+    toggleFilter,
+    functions,
+    selectedFunctions,
+    colors,
+    selectedColors,
+    priceRange,
+    maxPriceLimit,
+    setPriceRange,
+}) => (
+    <>
+        {/* Search */}
+        <div className="mb-8">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded pl-10 pr-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-yellow-600 focus:ring-1 focus:ring-yellow-600"
+                />
+            </div>
+        </div>
+
+        <div className="border border-gray-200 bg-white rounded-lg p-4">
+
+            {/* Category Filter */}
+            <FilterAccordionItem title="Category" defaultOpen={true}>
+                <CheckboxFilterGroup
+                    options={categories}
+                    selectedFilters={selectedCategories}
+                    onToggle={(id) => toggleFilter('category', id)}
+                />
+            </FilterAccordionItem>
+
+            {/* Function Filter */}
+            <FilterAccordionItem title="Function">
+                <CheckboxFilterGroup
+                    options={functions}
+                    selectedFilters={selectedFunctions}
+                    onToggle={(id) => toggleFilter('function', id)}
+                />
+            </FilterAccordionItem>
+
+            {/* Color Filter */}
+            <FilterAccordionItem title="Color">
+                <CheckboxFilterGroup
+                    options={colors}
+                    selectedFilters={selectedColors}
+                    onToggle={(id) => toggleFilter('color', id)}
+                />
+            </FilterAccordionItem>
+
+            {/* Price Range Filter */}
+            <FilterAccordionItem title="Price Range">
+                <div className="py-2 px-1">
+                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                        <span>₦0</span>
+                        <span>₦{priceRange[1].toLocaleString()}</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max={maxPriceLimit}
+                        step="1000"
+                        value={priceRange[1]}
+                        onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-yellow-600"
+                    />
+                    <div className="mt-2 text-center text-sm font-medium text-gray-700">
+                        Up to ₦{priceRange[1].toLocaleString()}
+                    </div>
+                </div>
+            </FilterAccordionItem>
+        </div>
+    </>
+);
+
+
 export default function Shop() {
   // State
   const [products, setProducts] = useState<Product[]>([]);
@@ -48,6 +148,7 @@ export default function Shop() {
   const [sortBy, setSortBy] = useState('relevance');
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(12);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get('category');
@@ -123,6 +224,7 @@ export default function Shop() {
     setSelectedSubCategories([]);
     setPriceRange([0, maxPriceLimit]);
     setSearchQuery('');
+    setMobileFiltersOpen(false); // Close drawer on clear
   };
 
   // Helper to get product price
@@ -227,6 +329,9 @@ export default function Shop() {
     ...selectedColors.map(id => ({ type: 'color' as const, id, label: colors.find(c => c.id === id)?.label || '' })),
   ];
 
+  const activeFilterCount = activeFilters.length + (searchQuery ? 1 : 0) + (priceRange[1] < maxPriceLimit ? 1 : 0) + selectedSubCategories.length;
+
+
   // Pagination calculations
   const totalProducts = sortedProducts.length;
   const totalPages = Math.ceil(totalProducts / productsPerPage);
@@ -262,78 +367,103 @@ export default function Shop() {
           SHOP
         </h1>
 
+        {/* Mobile Filter Toggle Button (Visible on small screens, hidden on lg screens and up) */}
+        <div className="lg:hidden mb-6">
+            <button
+                onClick={() => setMobileFiltersOpen(true)}
+                className="w-full flex items-center justify-center gap-2 bg-yellow-600 text-black px-4 py-3 rounded-lg font-bold text-sm tracking-wider hover:bg-yellow-500 transition-colors shadow-md"
+                aria-expanded={mobileFiltersOpen}
+                aria-controls="mobile-filter-drawer"
+            >
+                <SlidersHorizontal className="w-5 h-5" />
+                Filters
+                {activeFilterCount > 0 && (
+                    <span className="ml-2 bg-black text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-semibold">
+                        {activeFilterCount}
+                    </span>
+                )}
+            </button>
+        </div>
+        
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* Sidebar Filters */}
-          <aside className="lg:w-64 flex-shrink-0" data-aos="fade-right">
-
-            {/* Search */}
-            <div className="mb-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded pl-10 pr-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-yellow-600 focus:ring-1 focus:ring-yellow-600"
+          {/* Mobile Filter Drawer (Conditional) */}
+          {mobileFiltersOpen && (
+            <>
+                {/* Backdrop Overlay */}
+                <div
+                    className="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity duration-300"
+                    onClick={() => setMobileFiltersOpen(false)}
+                    aria-hidden="true"
                 />
-              </div>
-            </div>
+                
+                {/* Drawer Panel */}
+                <aside
+                    id="mobile-filter-drawer"
+                    className={`fixed top-0 left-0 h-full w-3/4 max-w-sm bg-[#FAF9F6] z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto p-6 ${
+                        mobileFiltersOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="filter-heading"
+                >
+                    <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                        <h2 id="filter-heading" className="text-xl font-bold text-gray-900">Filters</h2>
+                        <button
+                            onClick={() => setMobileFiltersOpen(false)}
+                            className="p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                            aria-label="Close filters"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
 
-            <div className="border border-gray-200 bg-white rounded-lg p-4">
+                    <div className="pt-4">
+                        <FilterContent 
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            categories={categories}
+                            selectedCategories={selectedCategories}
+                            toggleFilter={toggleFilter}
+                            functions={functions}
+                            selectedFunctions={selectedFunctions}
+                            colors={colors}
+                            selectedColors={selectedColors}
+                            priceRange={priceRange}
+                            maxPriceLimit={maxPriceLimit}
+                            setPriceRange={setPriceRange}
+                        />
 
-              {/* Category Filter */}
-              <FilterAccordionItem title="Category" defaultOpen={true}>
-                <CheckboxFilterGroup
-                  options={categories}
-                  selectedFilters={selectedCategories}
-                  onToggle={(id) => toggleFilter('category', id)}
-                />
-              </FilterAccordionItem>
+                        {/* Apply/Close Button (Optional, but good UX) */}
+                        <div className="mt-8">
+                            <button
+                                onClick={() => setMobileFiltersOpen(false)}
+                                className="w-full bg-yellow-600 text-black px-4 py-3 rounded-lg font-bold text-sm tracking-wider hover:bg-yellow-500 transition-colors shadow-md"
+                            >
+                                Show Products
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </>
+          )}
 
-              {/* Function Filter */}
-              <FilterAccordionItem title="Function">
-                <CheckboxFilterGroup
-                  options={functions}
-                  selectedFilters={selectedFunctions}
-                  onToggle={(id) => toggleFilter('function', id)}
-                />
-              </FilterAccordionItem>
-
-              {/* Color Filter */}
-              <FilterAccordionItem title="Color">
-                <CheckboxFilterGroup
-                  options={colors}
-                  selectedFilters={selectedColors}
-                  onToggle={(id) => toggleFilter('color', id)}
-                />
-              </FilterAccordionItem>
-
-              {/* Price Range Filter */}
-              <FilterAccordionItem title="Price Range">
-                <div className="py-2 px-1">
-                  <div className="flex justify-between text-xs text-gray-500 mb-2">
-                    <span>₦0</span>
-                    <span>₦{priceRange[1].toLocaleString()}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max={maxPriceLimit}
-                    step="1000"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-yellow-600"
-                  />
-                  <div className="mt-2 text-center text-sm font-medium text-gray-700">
-                    Up to ₦{priceRange[1].toLocaleString()}
-                  </div>
-                </div>
-              </FilterAccordionItem>
-
-            </div>
-
+          {/* Desktop Sidebar Filters (Hidden on small screens) */}
+          <aside className="hidden lg:block lg:w-64 flex-shrink-0" data-aos="fade-right">
+              <FilterContent 
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  categories={categories}
+                  selectedCategories={selectedCategories}
+                  toggleFilter={toggleFilter}
+                  functions={functions}
+                  selectedFunctions={selectedFunctions}
+                  colors={colors}
+                  selectedColors={selectedColors}
+                  priceRange={priceRange}
+                  maxPriceLimit={maxPriceLimit}
+                  setPriceRange={setPriceRange}
+              />
           </aside>
 
           {/* Main Content */}
@@ -481,8 +611,8 @@ export default function Shop() {
                           onClick={() => handleAddToCart(product)}
                           disabled={isOutOfStock(product)}
                           className={`w-full py-2 text-sm tracking-wider font-bold rounded transition-colors ${isOutOfStock(product)
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-yellow-600 text-black hover:bg-yellow-500'
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-yellow-600 text-black hover:bg-yellow-500'
                             }`}
                         >
                           {isOutOfStock(product) ? 'OUT OF STOCK' : 'ADD TO CART'}
@@ -525,8 +655,8 @@ export default function Shop() {
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
                             className={`px-4 py-2 rounded transition-colors ${currentPage === pageNum
-                                ? 'bg-yellow-600 text-black font-bold'
-                                : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+                              ? 'bg-yellow-600 text-black font-bold'
+                              : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
                               }`}
                           >
                             {pageNum}

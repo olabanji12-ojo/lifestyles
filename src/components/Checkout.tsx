@@ -93,135 +93,144 @@ export default function Checkout() {
     e.preventDefault();
     if (validateStep1()) {
       setCurrentStep(2);
+    } else {
+      // Scroll to first error field
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.getElementById(firstErrorField);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
+      toast.error('Please fix the errors below to continue');
     }
   };
 
   // Handle Paystack Payment
   // Key section to update in your Checkout.tsx
 
-const handlePayment = async (e: FormEvent) => {
-  e.preventDefault();
+  const handlePayment = async (e: FormEvent) => {
+    e.preventDefault();
 
-  if (!Paystack) {
-    toast.error('Payment system not loaded. Please refresh and try again.');
-    return;
-  }
-
-  if (!currentUser) {
-    toast.error('Please sign in to continue');
-    navigate('/login?redirect=/checkout');
-    return;
-  }
-
-  setProcessingPayment(true);
-  setLoading(true);
-
-  try {
-    console.log('📞 Calling backend to prepare order...');
-    
-    // Step 1: Call YOUR backend to prepare order (NOT Paystack yet!)
-    const initRes = await fetch('/api/initializePaystack', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        uid: currentUser.uid,
-        email: formData.email,
-        shippingAddress: `${formData.streetAddress}, ${formData.city}, ${formData.state}`,
-        customerInfo: {
-          fullName: `${formData.firstName} ${formData.lastName}`,
-          phone: formData.phone,
-        },
-      }),
-    });
-
-    if (!initRes.ok) {
-      const errorData = await initRes.json();
-      throw new Error(errorData.error || 'Failed to prepare order');
+    if (!Paystack) {
+      toast.error('Payment system not loaded. Please refresh and try again.');
+      return;
     }
 
-    const { reference, orderId, amount, email } = await initRes.json();
+    if (!currentUser) {
+      toast.error('Please sign in to continue');
+      navigate('/login?redirect=/checkout');
+      return;
+    }
 
-    console.log('✅ Order prepared:', { reference, orderId, amount });
+    setProcessingPayment(true);
+    setLoading(true);
 
-    // Step 2: Open Paystack popup (THIS is where Paystack transaction is created)
-    const paystack = new Paystack();
-    
-    paystack.newTransaction({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-      email: email,
-      amount: amount, // Already in kobo from backend
-      currency: 'NGN',
-      ref: reference,
-      
-      onSuccess: async (transaction: any) => {
-        console.log('✅ Payment successful:', transaction.reference);
-        setCurrentStep(3);
+    try {
+      console.log('📞 Calling backend to prepare order...');
 
-        try {
-          // Step 3: Verify payment with YOUR backend
-          const verifyRes = await fetch('/api/verifyPaystack', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reference: transaction.reference,
-              uid: currentUser.uid,
-            }),
-          });
+      // Step 1: Call YOUR backend to prepare order (NOT Paystack yet!)
+      const initRes = await fetch('/api/initializePaystack', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          email: formData.email,
+          shippingAddress: `${formData.streetAddress}, ${formData.city}, ${formData.state}`,
+          customerInfo: {
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone,
+          },
+        }),
+      });
 
-          const verifyData = await verifyRes.json();
+      if (!initRes.ok) {
+        const errorData = await initRes.json();
+        throw new Error(errorData.error || 'Failed to prepare order');
+      }
 
-          if (verifyData.verified) {
-            console.log('✅ Payment verified');
-            await clearCart();
-            
-            setTimeout(() => {
-              navigate('/order-confirmation', {
-                state: {
-                  reference: transaction.reference,
-                  orderId: verifyData.orderId,
-                  amount: amount / 100, // Convert back to Naira for display
-                },
-              });
-            }, 1500);
-          } else {
-            throw new Error('Payment verification failed');
+      const { reference, orderId, amount, email } = await initRes.json();
+
+      console.log('✅ Order prepared:', { reference, orderId, amount });
+
+      // Step 2: Open Paystack popup (THIS is where Paystack transaction is created)
+      const paystack = new Paystack();
+
+      paystack.newTransaction({
+        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        email: email,
+        amount: amount, // Already in kobo from backend
+        currency: 'NGN',
+        ref: reference,
+
+        onSuccess: async (transaction: any) => {
+          console.log('✅ Payment successful:', transaction.reference);
+          setCurrentStep(3);
+
+          try {
+            // Step 3: Verify payment with YOUR backend
+            const verifyRes = await fetch('/api/verifyPaystack', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reference: transaction.reference,
+                uid: currentUser.uid,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.verified) {
+              console.log('✅ Payment verified');
+              await clearCart();
+
+              setTimeout(() => {
+                navigate('/order-confirmation', {
+                  state: {
+                    reference: transaction.reference,
+                    orderId: verifyData.orderId,
+                    amount: amount / 100, // Convert back to Naira for display
+                  },
+                });
+              }, 1500);
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            console.error('❌ Verification error:', error);
+            toast.error('Payment verification failed. Please contact support.');
+            navigate('/payment-failed', {
+              state: { reference: transaction.reference },
+            });
+          } finally {
+            setProcessingPayment(false);
+            setLoading(false);
           }
-        } catch (error) {
-          console.error('❌ Verification error:', error);
-          toast.error('Payment verification failed. Please contact support.');
-          navigate('/payment-failed', {
-            state: { reference: transaction.reference },
-          });
-        } finally {
+        },
+
+        onCancel: () => {
+          console.log('⚠️ Payment cancelled by user');
           setProcessingPayment(false);
           setLoading(false);
-        }
-      },
+          toast.error('Payment cancelled');
+        },
 
-      onCancel: () => {
-        console.log('⚠️ Payment cancelled by user');
-        setProcessingPayment(false);
-        setLoading(false);
-        toast.error('Payment cancelled');
-      },
+        onError: (error: any) => {
+          console.error('❌ Payment error:', error);
+          setProcessingPayment(false);
+          setLoading(false);
+          toast.error('Payment failed. Please try again.');
+        },
+      });
 
-      onError: (error: any) => {
-        console.error('❌ Payment error:', error);
-        setProcessingPayment(false);
-        setLoading(false);
-        toast.error('Payment failed. Please try again.');
-      },
-    });
-
-  } catch (error: any) {
-    console.error('❌ Checkout error:', error);
-    toast.error(error.message || 'Failed to process payment');
-    setProcessingPayment(false);
-    setLoading(false);
-  }
-};
+    } catch (error: any) {
+      console.error('❌ Checkout error:', error);
+      toast.error(error.message || 'Failed to process payment');
+      setProcessingPayment(false);
+      setLoading(false);
+    }
+  };
 
   // Get item price (handle variants)
   const getItemPrice = (item: any) => {
@@ -255,9 +264,8 @@ const handlePayment = async (e: FormEvent) => {
           <div className="flex justify-center items-center gap-4 max-w-md mx-auto">
             {/* Step 1 */}
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 1 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${currentStep >= 1 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
+                }`}>
                 {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
               </div>
               <span className="text-xs text-gray-500">Shipping</span>
@@ -267,9 +275,8 @@ const handlePayment = async (e: FormEvent) => {
 
             {/* Step 2 */}
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 2 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${currentStep >= 2 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
+                }`}>
                 {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
               </div>
               <span className="text-xs text-gray-500">Payment</span>
@@ -279,9 +286,8 @@ const handlePayment = async (e: FormEvent) => {
 
             {/* Step 3 */}
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                currentStep >= 3 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${currentStep >= 3 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
+                }`}>
                 3
               </div>
               <span className="text-xs text-gray-500">Complete</span>
@@ -294,6 +300,31 @@ const handlePayment = async (e: FormEvent) => {
           <div className="lg:col-span-2">
             {currentStep === 1 && (
               <form onSubmit={handleContinueToPayment} className="space-y-8" data-aos="fade-right">
+                {/* Error Summary Banner */}
+                {Object.keys(errors).length > 0 && (
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded" role="alert">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-bold text-red-800">
+                          {Object.keys(errors).length} field{Object.keys(errors).length !== 1 ? 's' : ''} need{Object.keys(errors).length === 1 ? 's' : ''} your attention
+                        </h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <ul className="list-disc list-inside space-y-1">
+                            {Object.entries(errors).map(([field, message]) => (
+                              <li key={field}>{message}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Shipping Address */}
                 <div className="bg-white shadow-md rounded-lg p-6">
                   <h3 className="text-gray-900 text-xl font-semibold mb-6">Shipping Address</h3>
