@@ -9,6 +9,10 @@
       "destination": "/sitemaps/:path*"
     },
     {
+      "source": "/:path((?!api/).*\\..*)",
+      "destination": "/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
