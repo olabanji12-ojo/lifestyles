@@ -1,5 +1,4 @@
 {
-  "cleanUrls": false,
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -10,7 +9,7 @@
       "destination": "/sitemaps/:path*"
     },
     {
-      "source": "/((?!sitemap|sitemaps|api).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
