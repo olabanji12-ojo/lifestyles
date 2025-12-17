@@ -1,7 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/((?!sitemap.xml|sitemaps/|assets/).*)",
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/sitemaps/:path*",
+      "destination": "/sitemaps/:path*"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
