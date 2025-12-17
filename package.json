@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite",
   "build": "vite build && node generate-sitemaps.js && ls -R dist",
   "postbuild": "echo 'Sitemap process complete'",
   "preview": "vite preview"
