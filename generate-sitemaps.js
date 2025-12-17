@@ -1,21 +1,21 @@
 import dotenv from 'dotenv';
 dotenv.config();
-dotenv.config({ path: 'api/.env' });
+// No need to load api/.env on Vercel as variables should be in the Dashboard
+if (!process.env.VERCEL) {
+    dotenv.config({ path: 'api/.env' });
+}
 
 import { SitemapStream, streamToPromise, SitemapIndexStream } from 'sitemap';
 import { createWriteStream, mkdirSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-
-// 1. IMPORT YOUR ADMIN HELPER
-// Ensure this path matches your project structure (e.g., './api/_firebaseAdmin.js')
 import { getAdmin } from './api/_firebaseAdmin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// 2. CONFIGURATION
+// --- VERCEL FIX: Force the path to the current working directory's 'dist' folder ---
 const HOSTNAME = 'https://goodthingsco.online';
-const OUTPUT_DIR = resolve(__dirname, 'dist');
+const OUTPUT_DIR = resolve(process.cwd(), 'dist'); 
 const SITEMAPS_DIR = resolve(OUTPUT_DIR, 'sitemaps');
 
 const staticPages = [
@@ -29,10 +29,6 @@ const staticPages = [
     { url: '/cart', changefreq: 'weekly', priority: 0.5 },
 ];
 
-/**
- * 3. FETCH DATA VIA ADMIN SDK
- * This replaces the old fetch() calls that were failing.
- */
 async function fetchData(collectionName) {
     try {
         console.log(`📡 Fetching ${collectionName} directly from Firestore...`);
@@ -47,9 +43,7 @@ async function fetchData(collectionName) {
         return snapshot.docs.map(doc => {
             const data = doc.data();
             return {
-                // Use slug field, or fallback to the document ID
                 slug: data.slug || doc.id,
-                // Use Firestore update time for the sitemap 'lastmod'
                 lastmod: doc.updateTime ? doc.updateTime.toDate() : new Date()
             };
         });
@@ -59,9 +53,6 @@ async function fetchData(collectionName) {
     }
 }
 
-/**
- * Helper: Generate a single sitemap file
- */
 async function generateChildSitemap(filename, links) {
     if (links.length === 0) return null;
 
@@ -80,19 +71,20 @@ async function generateChildSitemap(filename, links) {
     return `/sitemaps/${filename}`;
 }
 
-/**
- * Main Execution
- */
 async function run() {
     try {
+        // Ensure dist exists before we write to it
         if (!existsSync(OUTPUT_DIR)) {
+            console.log('📁 Creating dist directory...');
             mkdirSync(OUTPUT_DIR, { recursive: true });
         }
-        mkdirSync(SITEMAPS_DIR, { recursive: true });
+        
+        if (!existsSync(SITEMAPS_DIR)) {
+            mkdirSync(SITEMAPS_DIR, { recursive: true });
+        }
 
         console.log('🚀 Starting Sitemap Generation with Admin SDK...');
 
-        // Fetch dynamic data directly from database
         const [productsData, categoriesData] = await Promise.all([
             fetchData('products'),
             fetchData('categories')
@@ -114,7 +106,6 @@ async function run() {
 
         const sitemapPaths = [];
 
-        // Generate files
         const pPath = await generateChildSitemap('pages.xml', staticPages);
         if (pPath) sitemapPaths.push(pPath);
 
@@ -124,7 +115,6 @@ async function run() {
         const catPath = await generateChildSitemap('categories.xml', categoryLinks);
         if (catPath) sitemapPaths.push(catPath);
 
-        // Master Index
         if (sitemapPaths.length > 0) {
             const indexStream = new SitemapIndexStream({
                 hostname: HOSTNAME,
@@ -132,10 +122,11 @@ async function run() {
                 sitemaps: sitemapPaths.map(path => ({ url: HOSTNAME + path }))
             });
 
-            const indexWriteStream = createWriteStream(resolve(OUTPUT_DIR, 'sitemap.xml'));
+            const indexPath = resolve(OUTPUT_DIR, 'sitemap.xml');
+            const indexWriteStream = createWriteStream(indexPath);
             indexStream.pipe(indexWriteStream);
             indexStream.end();
-            console.log('🎉 Master sitemap.xml created at dist/sitemap.xml');
+            console.log(`🎉 Master sitemap.xml created at: ${indexPath}`);
         }
 
     } catch (error) {
