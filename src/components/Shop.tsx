@@ -60,8 +60,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isOutOfStock, getPro
 
             {/* Featured Badge */}
             {product.featured && !outOfStock && (
-                <span className="absolute top-4 left-4 z-10 px-3 py-1 rounded text-xs font-bold tracking-wider bg-yellow-600 text-black">
-                    FEATURED
+                <span className="absolute top-4 left-4 z-10 px-3 py-1 text-[8px] font-bold tracking-[0.2em] bg-gold-600 text-white uppercase">
+                    Archive Select
                 </span>
             )}
 
@@ -82,26 +82,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isOutOfStock, getPro
             </Link>
 
             {/* Info */}
-            <div className="p-4">
+            <div className="p-6 text-center">
                 <Link
                     to={`/product/${product.id}`}
-                    className="text-gray-900 text-lg font-medium mb-2 block hover:text-yellow-600 transition-colors"
-                    style={{ fontFamily: 'Dancing Script, cursive' }}
+                    className="text-gray-900 text-sm font-bold uppercase tracking-widest mb-2 block hover:text-gold-600 transition-colors"
                 >
                     {product.name}
                 </Link>
-                <p className="text-yellow-600 text-xl font-semibold mb-4">
+                <p className="text-gold-600 text-xs font-bold tracking-widest uppercase mb-4">
                     {getProductPrice(product)}
                 </p>
                 <button
                     onClick={() => handleAddToCart(product)}
                     disabled={outOfStock}
-                    className={`w-full py-2 text-sm tracking-wider font-bold rounded transition-colors ${outOfStock
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-yellow-600 text-black hover:bg-yellow-500'
+                    className={`w-full py-4 text-[10px] tracking-[0.3em] font-bold uppercase transition-all shadow-soft ${outOfStock
+                        ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                        : 'bg-white border border-gray-100 text-gray-900 hover:bg-gray-900 hover:text-white'
                         }`}
                 >
-                    {outOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
+                    {outOfStock ? 'Exhausted' : 'Acquire'}
                 </button>
             </div>
         </article>
@@ -116,70 +115,72 @@ const ProductListItem: React.FC<ProductCardProps> = ({ product, isOutOfStock, ge
     return (
         <article
             key={product.id}
-            className="flex flex-col sm:flex-row bg-white rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow"
+            className="flex flex-col sm:flex-row bg-white border border-gray-50 shadow-soft overflow-hidden group"
             data-aos="fade-up"
             data-aos-delay={index * 50}
         >
             {/* Image */}
-            <Link to={`/product/${product.id}`} className="block w-full sm:w-48 flex-shrink-0 aspect-video sm:aspect-square bg-gray-100 overflow-hidden relative">
+            <Link to={`/product/${product.id}`} className="block w-full sm:w-64 flex-shrink-0 aspect-[4/3] sm:aspect-square bg-gray-50 overflow-hidden relative">
                 {/* Badges in List View */}
-                {outOfStock && (
-                    <span className="absolute top-2 left-2 z-10 px-3 py-1 rounded text-xs font-bold tracking-wider bg-gray-500 text-white">
-                        OUT OF STOCK
+                {outOfStock ? (
+                    <span className="absolute top-4 left-4 z-10 px-3 py-1 text-[8px] font-bold tracking-[0.2em] bg-gray-100 text-gray-400 uppercase">
+                        Exhausted
                     </span>
-                )}
-                {product.featured && !outOfStock && (
-                    <span className="absolute top-2 left-2 z-10 px-3 py-1 rounded text-xs font-bold tracking-wider bg-yellow-600 text-black">
-                        FEATURED
+                ) : product.featured && (
+                    <span className="absolute top-4 left-4 z-10 px-3 py-1 text-[8px] font-bold tracking-[0.2em] bg-gold-600 text-white uppercase">
+                        Archive Select
                     </span>
                 )}
 
-                {product.images && product.images[0] ? (
+                {product.images?.[0] ? (
                     <img
                         src={product.images[0]}
                         alt={product.name}
-                        className={`w-full h-full object-cover hover:scale-105 transition-transform duration-500 ${outOfStock ? 'opacity-50' : ''
-                            }`}
+                        className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ${outOfStock ? 'opacity-50' : ''}`}
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                        <ShoppingBag className="w-16 h-16 text-gray-400" />
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                        <ShoppingBag className="w-12 h-12 text-gray-200" />
                     </div>
                 )}
             </Link>
 
             {/* Info */}
-            <div className="p-4 flex flex-col justify-between flex-grow">
+            <div className="p-8 flex flex-col justify-between flex-grow">
                 <div>
-                    <Link
-                        to={`/product/${product.id}`}
-                        className="text-gray-900 text-xl font-medium mb-1 block hover:text-yellow-600 transition-colors"
-                        style={{ fontFamily: 'Dancing Script, cursive' }}
-                    >
-                        {product.name}
-                    </Link>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                    <p className="text-yellow-600 text-2xl font-semibold mb-4">
-                        {getProductPrice(product)}
-                    </p>
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <span className="text-[10px] text-gold-600 font-bold uppercase tracking-widest block mb-1">{product.category}</span>
+                            <Link
+                                to={`/product/${product.id}`}
+                                className="text-gray-900 text-2xl font-serif tracking-tight hover:text-gold-600 transition-colors"
+                            >
+                                {product.name}
+                            </Link>
+                        </div>
+                        <p className="text-xl font-serif italic text-gray-900">
+                            {getProductPrice(product)}
+                        </p>
+                    </div>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-6 line-clamp-2 italic font-sans-serif">{product.description}</p>
                 </div>
 
-                <div className="flex items-center gap-4 mt-auto">
+                <div className="flex items-center gap-6 mt-auto">
                     <button
                         onClick={() => handleAddToCart(product)}
                         disabled={outOfStock}
-                        className={`py-2 px-6 text-sm tracking-wider font-bold rounded transition-colors flex-shrink-0 ${outOfStock
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-yellow-600 text-black hover:bg-yellow-500'
+                        className={`px-8 py-4 text-[10px] tracking-[0.3em] font-bold uppercase transition-all shadow-soft ${outOfStock
+                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                            : 'bg-gray-900 text-white hover:bg-gold-600'
                             }`}
                     >
-                        {outOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
+                        {outOfStock ? 'Exhausted' : 'Acquire Piece'}
                     </button>
                     <Link
                         to={`/product/${product.id}`}
-                        className="flex items-center gap-1 text-sm text-yellow-600 font-medium hover:text-yellow-500 transition-colors"
+                        className="flex items-center gap-2 text-[10px] text-gold-600 uppercase tracking-widest font-bold hover:text-gray-900 transition-colors"
                     >
-                        View Details <ArrowRight className="w-4 h-4" />
+                        View Narrative <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
@@ -282,7 +283,7 @@ const FilterContent: React.FC<FilterContentProps> = ({
                     placeholder="Search products..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded pl-10 pr-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-yellow-600 focus:ring-1 focus:ring-yellow-600"
+                    className="w-full bg-white border border-gray-300 rounded pl-10 pr-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-gold-600 focus:ring-1 focus:ring-gold-600"
                 />
             </div>
         </div>
@@ -330,7 +331,7 @@ const FilterContent: React.FC<FilterContentProps> = ({
                         step="1000"
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-yellow-600"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gold-600"
                     />
                     <div className="mt-2 text-center text-sm font-medium text-gray-700">
                         Up to ₦{priceRange[1].toLocaleString()}
@@ -573,35 +574,33 @@ export default function Shop() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAF9F6] text-gray-800 pt-20">
+        <div className="min-h-screen bg-cream-100 text-gray-900 pt-24">
             <div className="max-w-screen-xl mx-auto px-6 sm:px-10 py-12">
                 {/* Breadcrumb */}
-                <nav className="text-sm text-gray-500 mb-8" aria-label="Breadcrumb">
-                    <Link to="/" className="hover:text-yellow-600 transition-colors">Home</Link>
-                    <span className="mx-2 text-gray-400">/</span>
-                    <span className="text-gray-800 font-medium">Shop</span>
+                <nav className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 mb-12 flex items-center gap-2" aria-label="Breadcrumb">
+                    <Link to="/" className="hover:text-gold-600 transition-colors">Archive</Link>
+                    <span className="text-gray-200">/</span>
+                    <span className="text-gray-900 font-medium">Archives</span>
                 </nav>
 
                 {/* Page Title */}
-                <h1
-                    className="font-serif text-5xl sm:text-6xl md:text-7xl tracking-[0.15em] text-center mb-12 text-gray-900"
-                    data-aos="fade-down"
-                >
-                    SHOP
-                </h1>
+                <div className="text-center mb-16" data-aos="fade-down">
+                    <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-4 block">The Collection</span>
+                    <h1 className="font-serif text-6xl sm:text-7xl md:text-8xl tracking-tight text-gray-900">Archive</h1>
+                </div>
 
                 {/* Mobile Filter Toggle Button (Visible on small screens, hidden on lg screens and up) */}
                 <div className="lg:hidden mb-6">
                     <button
                         onClick={() => setMobileFiltersOpen(true)}
-                        className="w-full flex items-center justify-center gap-2 bg-yellow-600 text-black px-4 py-3 rounded-lg font-bold text-sm tracking-wider hover:bg-yellow-500 transition-colors shadow-md"
+                        className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white px-4 py-4 text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-gold-600 transition-colors shadow-premium"
                         aria-expanded={mobileFiltersOpen}
                         aria-controls="mobile-filter-drawer"
                     >
-                        <SlidersHorizontal className="w-5 h-5" />
-                        Filters
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Refine Archive
                         {activeFilterCount > 0 && (
-                            <span className="ml-2 bg-black text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-semibold">
+                            <span className="ml-2 bg-gold-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-bold">
                                 {activeFilterCount}
                             </span>
                         )}
@@ -804,9 +803,9 @@ export default function Shop() {
                                 <p className="text-gray-500 text-sm mb-6">Try adjusting your filters</p>
                                 <button
                                     onClick={clearAllFilters}
-                                    className="bg-yellow-600 text-black px-6 py-2 rounded hover:bg-yellow-500 transition"
+                                    className="bg-gray-900 text-white px-8 py-4 text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-gold-600 transition shadow-premium"
                                 >
-                                    Clear Filters
+                                    Reset Selection
                                 </button>
                             </div>
                         ) : (
@@ -883,9 +882,9 @@ export default function Shop() {
                                                     <button
                                                         key={pageNum}
                                                         onClick={() => handlePageChange(pageNum)}
-                                                        className={`px-4 py-2 rounded transition-colors ${currentPage === pageNum
-                                                            ? 'bg-yellow-600 text-black font-bold'
-                                                            : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+                                                        className={`px-4 py-2 font-serif transition-colors ${currentPage === pageNum
+                                                            ? 'text-gold-600 underline underline-offset-8 font-bold'
+                                                            : 'text-gray-400 hover:text-gray-900'
                                                             }`}
                                                     >
                                                         {pageNum}

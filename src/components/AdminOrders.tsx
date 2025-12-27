@@ -71,7 +71,7 @@ export default function AdminOrders() {
 
   // Filter orders
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+    const matchesSearch =
       order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
@@ -92,49 +92,51 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-cream-100 text-gray-900 pt-24 font-sans-serif">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-serif mb-2">Orders Management</h1>
-          <p className="text-gray-400">Track and manage all customer orders</p>
+        <div className="mb-12">
+          <h1 className="text-5xl font-serif mb-4 tracking-tight">Order Manifest</h1>
+          <p className="text-gray-500 font-sans-serif tracking-widest uppercase text-[10px] font-bold">Curating Customer Journeys</p>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="flex flex-col lg:flex-row gap-6 mb-12">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by order ID, customer name, or email..."
+              placeholder="Search by ID, Customer, or Email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-yellow-600"
+              className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 shadow-soft focus:shadow-premium focus:outline-none focus:border-gold-300 transition-all text-sm"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-yellow-600"
-            >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Packed">Packed</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+          <div className="flex items-center gap-4">
+            <div className="bg-white border border-gray-100 shadow-soft px-6 py-5 flex items-center gap-3">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent focus:outline-none text-xs font-bold uppercase tracking-widest text-gray-600 appearance-none pr-8 cursor-pointer"
+              >
+                <option value="All">All Transactions</option>
+                <option value="Pending">Pending</option>
+                <option value="Packed">Packed</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
           {(['Pending', 'Packed', 'Shipped', 'Delivered'] as Order['status'][]).map(status => (
-            <div key={status} className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-1">{status}</p>
-              <p className="text-2xl font-bold">{orders.filter(o => o.status === status).length}</p>
+            <div key={status} className="bg-white border border-gray-100 shadow-soft p-6">
+              <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">{status}</p>
+              <p className="text-4xl font-serif">{orders.filter(o => o.status === status).length}</p>
             </div>
           ))}
         </div>
@@ -154,59 +156,58 @@ export default function AdminOrders() {
             {filteredOrders.map(order => {
               const nextStatus = getNextStatus(order.status);
               return (
-                <div 
-                  key={order.id} 
-                  className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition"
+                <div
+                  key={order.id}
+                  className="bg-white border border-gray-100 shadow-soft p-8 group hover:shadow-premium transition-all duration-500"
                 >
                   <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
                     <div className="flex-1">
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className={`p-2 rounded-lg ${statusColors[order.status]}`}>
-                          {statusIcons[order.status]}
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold">{order.orderId}</h3>
-                          <p className="text-sm text-gray-400">
-                            {order.createdAt?.toDate?.().toLocaleDateString() || 'N/A'}
-                          </p>
-                        </div>
-                        <span className={`px-4 py-1 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
+                      <div className="flex flex-wrap items-center gap-6 mb-6">
+                        <span className="text-[10px] tracking-[0.3em] font-bold text-gold-600 uppercase italic">#{order.orderId}</span>
+                        <span className={`px-4 py-1.5 text-[10px] font-bold tracking-widest uppercase ${statusColors[order.status]}`}>
                           {order.status}
                         </span>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                          {order.createdAt?.toDate?.().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) || 'N/A'}
+                        </span>
                       </div>
-                      
-                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <div>
-                          <p className="text-gray-400">Customer</p>
-                          <p className="font-medium">{order.customerName}</p>
-                          <p className="text-gray-400 text-xs">{order.customerEmail}</p>
+                          <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-1">Customer</p>
+                          <p className="font-serif text-lg text-gray-900">{order.customerName}</p>
+                          <p className="text-xs text-gray-400 mt-1">{order.customerEmail}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400">Total Amount</p>
-                          <p className="text-2xl font-bold text-yellow-600">₦{order.total.toLocaleString()}</p>
+                          <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-1">Total Value</p>
+                          <p className="font-serif text-2xl text-gray-900">₦{order.total.toLocaleString()}</p>
+                        </div>
+                        <div className="hidden lg:block">
+                          <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-1">Items</p>
+                          <p className="text-xs text-gray-600">{order.items.length} product(s) in batch</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
-                      <button 
+                    <div className="flex flex-wrap gap-3 lg:border-l lg:border-gray-50 lg:pl-8">
+                      <button
                         onClick={() => openDetailModal(order)}
-                        className="px-6 py-3 border border-white/20 rounded-full hover:border-yellow-600 hover:text-yellow-600 transition flex items-center gap-2"
+                        className="px-8 py-4 bg-gray-50 text-[10px] font-bold tracking-widest uppercase text-gray-600 hover:bg-gray-100 transition-all flex items-center gap-2"
                       >
-                        <Eye className="w-5 h-5" /> View Details
+                        <Eye className="w-4 h-4" /> Details
                       </button>
                       {nextStatus && (
-                        <button 
+                        <button
                           onClick={() => handleStatusUpdate(order.id!, nextStatus)}
                           disabled={updatingStatus}
-                          className="px-6 py-3 bg-yellow-600 text-black rounded-full hover:bg-yellow-500 transition flex items-center gap-2 disabled:opacity-50"
+                          className="px-8 py-4 bg-gray-900 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-gold-600 transition-all flex items-center gap-2 disabled:opacity-50"
                         >
                           {updatingStatus ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <Truck className="w-5 h-5" />
+                            <Truck className="w-4 h-4" />
                           )}
-                          Mark as {nextStatus}
+                          Advance to {nextStatus}
                         </button>
                       )}
                     </div>
@@ -217,37 +218,36 @@ export default function AdminOrders() {
           </div>
         )}
 
-        {/* Order Detail Modal */}
         {showDetailModal && selectedOrder && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-gray-900 border-b border-white/10 px-8 py-6 flex justify-between items-center">
+          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+            <div className="bg-white shadow-premium max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+              <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-50 px-10 py-8 flex justify-between items-start z-10">
                 <div>
-                  <h2 className="text-2xl font-bold">{selectedOrder.orderId}</h2>
-                  <p className="text-sm text-gray-400">
-                    Ordered on {selectedOrder.createdAt?.toDate?.().toLocaleDateString()}
+                  <span className="text-[10px] tracking-[0.4em] text-gold-600 font-bold uppercase mb-2 block">Order Specifics</span>
+                  <h2 className="text-4xl font-serif text-gray-900 tracking-tight">#{selectedOrder.orderId}</h2>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-2">
+                    Initialized on {selectedOrder.createdAt?.toDate?.().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
-                <button onClick={closeDetailModal} className="text-gray-400 hover:text-white">
-                  <Eye className="w-6 h-6" />
+                <button onClick={closeDetailModal} className="w-12 h-12 bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                  <X className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
 
-              <div className="p-8 space-y-6">
-                {/* Status */}
+              <div className="p-10 space-y-12">
+                {/* Workflow Progress */}
                 <div>
-                  <h3 className="text-lg font-bold mb-3">Order Status</h3>
-                  <div className="flex gap-2">
+                  <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-gray-400 mb-6">Workflow Status</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {(['Pending', 'Packed', 'Shipped', 'Delivered'] as Order['status'][]).map(status => (
                       <button
                         key={status}
                         onClick={() => handleStatusUpdate(selectedOrder.id!, status)}
                         disabled={updatingStatus}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                          selectedOrder.status === status
+                        className={`px-4 py-4 text-[10px] font-bold tracking-widest uppercase transition-all border ${selectedOrder.status === status
                             ? statusColors[status]
-                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                        } disabled:opacity-50`}
+                            : 'bg-gray-50 border-gray-50 text-gray-400 hover:border-gray-200'
+                          } disabled:opacity-50`}
                       >
                         {status}
                       </button>
@@ -255,41 +255,50 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
-                {/* Customer Info */}
-                <div>
-                  <h3 className="text-lg font-bold mb-3">Customer Information</h3>
-                  <div className="bg-white/5 rounded-lg p-4 space-y-2">
-                    <p><span className="text-gray-400">Name:</span> {selectedOrder.customerName}</p>
-                    <p><span className="text-gray-400">Email:</span> {selectedOrder.customerEmail}</p>
-                    <p><span className="text-gray-400">Phone:</span> {selectedOrder.customerPhone}</p>
-                    <p><span className="text-gray-400">Address:</span> {selectedOrder.shippingAddress}</p>
-                  </div>
-                </div>
-
-                {/* Order Items */}
-                <div>
-                  <h3 className="text-lg font-bold mb-3">Order Items</h3>
-                  <div className="space-y-3">
-                    {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="bg-white/5 rounded-lg p-4 flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">{item.productName}</p>
-                          <p className="text-sm text-gray-400">Quantity: {item.quantity}</p>
-                        </div>
-                        <p className="font-bold text-yellow-600">₦{(item.price * item.quantity).toLocaleString()}</p>
+                <div className="grid md:grid-cols-2 gap-16">
+                  {/* Customer Info */}
+                  <div>
+                    <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-gray-400 mb-6">Consignee</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-1">Identity</p>
+                        <p className="font-serif text-xl border-b border-gray-50 pb-2">{selectedOrder.customerName}</p>
                       </div>
-                    ))}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-1">Communication</p>
+                        <p className="text-sm text-gray-600">{selectedOrder.customerEmail}</p>
+                        <p className="text-sm text-gray-600">{selectedOrder.customerPhone}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-1">Curation Destination</p>
+                        <p className="text-sm text-gray-600 leading-relaxed italic">"{selectedOrder.shippingAddress}"</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Order Items */}
+                  <div>
+                    <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-gray-400 mb-6">Collection Items</h3>
+                    <div className="space-y-6">
+                      {selectedOrder.items.map((item, index) => (
+                        <div key={index} className="flex justify-between items-start border-b border-gray-50 pb-4">
+                          <div>
+                            <p className="font-serif text-lg text-gray-900">{item.productName}</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Quantity: {item.quantity}</p>
+                          </div>
+                          <p className="font-serif text-gray-900">₦{(item.price * item.quantity).toLocaleString()}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Total */}
-                <div className="border-t border-white/10 pt-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-xl font-bold">Total Amount</p>
-                    <p className="text-3xl font-bold text-yellow-600">₦{selectedOrder.total.toLocaleString()}</p>
-                  </div>
+                <div className="bg-gray-50 p-10 flex flex-col items-end">
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-gray-400 font-bold mb-2">Grand Total</p>
+                  <p className="text-5xl font-serif text-gray-900">₦{selectedOrder.total.toLocaleString()}</p>
                   {selectedOrder.paymentRef && (
-                    <p className="text-sm text-gray-400 mt-2">Payment Ref: {selectedOrder.paymentRef}</p>
+                    <p className="text-[10px] text-gray-400 mt-6 tracking-widest border-t border-gray-200 pt-4 uppercase">Reference: {selectedOrder.paymentRef}</p>
                   )}
                 </div>
               </div>

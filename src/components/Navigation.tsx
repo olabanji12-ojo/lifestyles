@@ -117,125 +117,127 @@ export default function Navigation({
   return (
     <>
 
-      {/* MAIN NAV — Fixed, pure white, NO SHADOW */}
+      {/* MAIN NAV — Fixed, refined glassmorphism */}
       <header
-        className={`fixed top-0 left-0 right-0 bg-white z-40 py-4 px-6 lg:px-12 flex justify-between items-center border-b border-gray-100`}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 glass border-b border-gray-100/50"
       >
+        <div className="max-w-[1600px] mx-auto py-4 px-6 lg:px-12 flex justify-between items-center">
+          {/* Logo */}
+          <Link to="/" className="group flex flex-col items-center gap-0">
+            <span className="text-3xl font-handwritten text-gray-900 transition-colors group-hover:text-gold-600">Inspire</span>
+            <span className="text-[10px] tracking-[0.3em] font-sans-serif text-gray-400 uppercase -mt-1 group-hover:text-gold-400 transition-colors">Lifestyle</span>
+          </Link>
 
-        {/* Logo */}
-        <Link to="/" className="text-3xl font-handwritten text-gray-900 z-10">
-          Inspire
-        </Link>
+          {/* Desktop Nav - Shows only on large screens (1024px+) */}
+          <nav className="hidden lg:flex gap-8 items-center">
+            {menuItems.map((item) => (
+              <div
+                key={item.label}
+                className="relative group"
+                // *** FIX: Use the new delayed handlers here ***
+                onMouseEnter={() => "subs" in item && handleMouseEnter(item.label)}
+                onMouseLeave={handleMouseLeave}
+              >
+                {"subs" in item ? (
+                  <>
+                    <button
+                      onClick={() => toggleDropdown(item.label)}
+                      className="text-sm tracking-widest text-gray-900 flex items-center gap-1 hover:text-gray-600 transition"
+                    >
+                      {item.label}
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
 
-        {/* Desktop Nav - Shows only on large screens (1024px+) */}
-        <nav className="hidden lg:flex gap-8 items-center">
-          {menuItems.map((item) => (
-            <div
-              key={item.label}
-              className="relative group"
-              // *** FIX: Use the new delayed handlers here ***
-              onMouseEnter={() => "subs" in item && handleMouseEnter(item.label)}
-              onMouseLeave={handleMouseLeave}
-            >
-              {"subs" in item ? (
-                <>
-                  <button
-                    onClick={() => toggleDropdown(item.label)}
-                    className="text-sm tracking-widest text-gray-900 flex items-center gap-1 hover:text-gray-600 transition"
+                    {/* Dropdown — stays open when hovering over it */}
+                    {openDropdown === item.label && (
+                      <div
+                        className="absolute top-full left-0 mt-2 bg-white shadow-lg rounded-sm py-2 w-48 z-50"
+                      // NOTE: We don't need onMouseEnter/onMouseLeave here anymore, the parent div handles the state
+                      >
+                        {item.subs!.map((sub) => (
+                          <Link
+                            key={sub.name}
+                            to={sub.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition"
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={item.href}
+                    className="text-sm tracking-widest text-gray-900 hover:text-gray-600 transition"
                   >
                     {item.label}
-                    <ChevronDown className="w-3 h-3" />
-                  </button>
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
 
-                  {/* Dropdown — stays open when hovering over it */}
-                  {openDropdown === item.label && (
-                    <div
-                      className="absolute top-full left-0 mt-2 bg-white shadow-lg rounded-sm py-2 w-48 z-50"
-                    // NOTE: We don't need onMouseEnter/onMouseLeave here anymore, the parent div handles the state
-                    >
-                      {item.subs!.map((sub) => (
-                        <Link
-                          key={sub.name}
-                          to={sub.href}
-                          onClick={() => setOpenDropdown(null)}
-                          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition"
-                        >
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Link
-                  to={item.href}
-                  className="text-sm tracking-widest text-gray-900 hover:text-gray-600 transition"
-                >
-                  {item.label}
-                </Link>
+          {/* ... (Rest of the Navigation component, including right-side icons and mobile menu, is unchanged from the previous fixed version) ... */}
+
+          {/* Right side - Shows only on large screens */}
+          <div className="hidden lg:flex items-center gap-6">
+            <Link to="/cart" className="relative">
+              <ShoppingBag className="w-6 h-6 text-gray-900" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
               )}
-            </div>
-          ))}
-        </nav>
-
-        {/* ... (Rest of the Navigation component, including right-side icons and mobile menu, is unchanged from the previous fixed version) ... */}
-
-        {/* Right side - Shows only on large screens */}
-        <div className="hidden lg:flex items-center gap-6">
-          <Link to="/cart" className="relative">
-            <ShoppingBag className="w-6 h-6 text-gray-900" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Admin Dashboard Link - Only visible to admins */}
-          {role === 'admin' && (
-            <Link
-              to="/dashboard"
-              className="text-sm tracking-widest text-gray-900 hover:text-yellow-600 transition"
-            >
-              DASHBOARD
             </Link>
-          )}
 
-          {currentUser ? (
+            {/* Admin Dashboard Link - Only visible to admins */}
+            {role === 'admin' && (
+              <Link
+                to="/dashboard"
+                className="text-sm tracking-widest text-gray-900 hover:text-gold-600 transition"
+              >
+                DASHBOARD
+              </Link>
+            )}
+
+            {currentUser ? (
+              <button
+                onClick={() => handleLogout(navigate)}
+                className="text-sm tracking-widest text-gray-900 hover:text-gray-600 transition"
+              >
+                LOGOUT
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="text-sm tracking-widest text-gray-900 hover:text-gray-600 transition"
+              >
+                LOGIN
+              </Link>
+            )}
+          </div>
+
+          {/* Mobile/Tablet Cart Icon - Shows when menu is hidden */}
+          <div className="lg:hidden flex items-center gap-4">
+            <Link to="/cart" className="relative z-10">
+              <ShoppingBag className="w-6 h-6 text-gray-900" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Mobile menu button - Shows on screens below 1024px */}
             <button
-              onClick={() => handleLogout(navigate)}
-              className="text-sm tracking-widest text-gray-900 hover:text-gray-600 transition"
+              onClick={() => setMobileMenuOpen(true)}
+              className="z-10"
             >
-              LOGOUT
+              <Menu className="w-7 h-7 text-gray-900" />
             </button>
-          ) : (
-            <Link
-              to="/login"
-              className="text-sm tracking-widest text-gray-900 hover:text-gray-600 transition"
-            >
-              LOGIN
-            </Link>
-          )}
-        </div>
-
-        {/* Mobile/Tablet Cart Icon - Shows when menu is hidden */}
-        <div className="lg:hidden flex items-center gap-4">
-          <Link to="/cart" className="relative z-10">
-            <ShoppingBag className="w-6 h-6 text-gray-900" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Mobile menu button - Shows on screens below 1024px */}
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="z-10"
-          >
-            <Menu className="w-7 h-7 text-gray-900" />
-          </button>
+          </div>
         </div>
       </header>
 
@@ -303,7 +305,7 @@ export default function Navigation({
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-xl tracking-widest text-yellow-600 hover:text-yellow-700 transition font-bold"
+                className="text-xl tracking-widest text-gold-600 hover:text-gold-700 transition font-bold"
               >
                 DASHBOARD
               </Link>

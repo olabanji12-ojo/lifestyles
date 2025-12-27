@@ -4,6 +4,7 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules'; // Import necessary modules
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -54,70 +55,77 @@ const carouselItems: CarouselItem[] = [
 
 export default function LifestyleCarousel() {
   return (
-    <section className="bg-white py-20 lg:py-32" aria-labelledby="lifestyle-carousel-title">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="bg-cream-100 py-24 lg:py-40 overflow-hidden" aria-labelledby="lifestyle-carousel-title">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12">
 
-        {/* Section Header */}
-        <div className="text-center mb-12 lg:mb-16">
-          <h2 id="lifestyle-carousel-title"
-            className="font-handwritten text-5xl sm:text-6xl text-gray-900 mb-4">
-            #InspireYourLife
-          </h2>
-          <p className="font-sans-serif text-lg text-gray-700 max-w-2xl mx-auto">
-            Discover how our community styles and celebrates with Inspire.
-            Tag us to be featured!
-          </p>
-          <Link to="/inspired" className="inline-block mt-6 px-8 py-3 border-2 border-gray-900 bg-gray-900 text-white text-sm tracking-widest uppercase transition-all duration-300 hover:bg-white hover:text-gold-500 hover:border-gold-500">
-            View Our Gallery
-          </Link>
+        {/* Section Header: Editorial Spread */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end mb-20">
+          <div className="lg:col-span-8" data-aos="fade-right">
+            <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-4 block">Shared Perspectives</span>
+            <h2 id="lifestyle-carousel-title"
+              className="font-serif text-6xl sm:text-7xl md:text-8xl text-gray-900 tracking-tighter leading-none">
+              Social <span className="italic">Narrative.</span>
+            </h2>
+          </div>
+          <div className="lg:col-span-4 lg:text-right" data-aos="fade-left">
+            <p className="font-sans-serif text-sm text-gray-500 max-w-sm ml-auto mb-8 leading-relaxed italic border-r-2 border-gold-100 pr-6 hidden lg:block">
+              A curated collection of shared moments from our collective archive. Tag your acquisition with #InspireYourLife.
+            </p>
+            <Link to="/inspired" className="inline-flex items-center gap-4 text-[10px] font-bold tracking-[0.4em] uppercase text-gray-900 hover:text-gold-600 transition-colors group">
+              View The Full Archive <div className="w-8 h-px bg-gray-900 group-hover:bg-gold-600 group-hover:w-16 transition-all duration-500" />
+            </Link>
+          </div>
         </div>
 
         {/* Swiper Carousel */}
-        <Swiper
-          modules={[Pagination, Autoplay]} // Enable Pagination and Autoplay
-          spaceBetween={30} // Space between slides
-          slidesPerView={1} // Show 1 slide on mobile
-          centeredSlides={true} // Center the active slide
-          loop={true} // Infinite loop
-          autoplay={{
-            delay: 4000, // 4 seconds delay
-            disableOnInteraction: false, // Keep autoplaying even after user interaction
-          }}
-          pagination={{
-            clickable: true,
-            dynamicBullets: true // A nice visual effect for pagination
-          }}
-          breakpoints={{
-            // When window width is >= 768px (md)
-            768: {
-              slidesPerView: 2,
-              spaceBetween: 40,
-            },
-            // When window width is >= 1024px (lg)
-            1024: {
-              slidesPerView: 3,
-              spaceBetween: 50,
-            },
-          }}
-          className="mySwiper w-full" // Apply width to Swiper container
-        >
-          {carouselItems.map((item) => (
-            <SwiperSlide key={item.id} className="p-2"> {/* Add some padding around each slide */}
-              <Link to={item.link} className="block group relative overflow-hidden rounded-lg shadow-xl">
-                <img
-                  src={item.image}
-                  alt={item.alt}
-                  className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-20 transition-opacity flex items-end p-4">
-                  <span className="text-white text-sm font-sans-serif tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {item.alt}
-                  </span>
-                </div>
-              </Link>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <div data-aos="fade-up" data-aos-delay="200">
+          <Swiper
+            modules={[Pagination, Autoplay]}
+            spaceBetween={40}
+            slidesPerView={1.2}
+            centeredSlides={true}
+            loop={true}
+            autoplay={{
+              delay: 5000,
+              disableOnInteraction: false,
+            }}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true
+            }}
+            breakpoints={{
+              768: { slidesPerView: 2, spaceBetween: 50 },
+              1280: { slidesPerView: 3, spaceBetween: 60 },
+            }}
+            className="mySwiper w-full !overflow-visible"
+          >
+            {carouselItems.map((item) => (
+              <SwiperSlide key={item.id}>
+                <Link to={item.link} className="block group relative overflow-hidden bg-white p-4 shadow-premium transition-transform duration-700 hover:-translate-y-4">
+                  <div className="relative overflow-hidden aspect-[4/5]">
+                    <img
+                      src={item.image}
+                      alt={item.alt}
+                      className="w-full h-full object-cover transition-all duration-[2000ms] ease-out group-hover:scale-110 group-hover:grayscale-[50%]"
+                    />
+                    {/* Editorial Overlay */}
+                    <div className="absolute inset-0 bg-gray-900/0 group-hover:bg-gray-900/20 transition-all duration-700" />
+                  </div>
+
+                  <div className="mt-6 flex justify-between items-start gap-4">
+                    <div>
+                      <p className="text-[8px] tracking-[0.3em] uppercase text-gold-600 font-bold mb-1">Archive Entry</p>
+                      <p className="text-sm font-serif italic text-gray-900 line-clamp-1">{item.alt}</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-gray-900 group-hover:text-white transition-all duration-500">
+                      <ArrowRight className="w-3 h-3" />
+                    </div>
+                  </div>
+                </Link>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       </div>
     </section>
   );

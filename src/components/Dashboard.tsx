@@ -25,7 +25,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     setLoading(true);
-    
+
     // Fetch stats
     const statsResult = await getDashboardStats();
     if (statsResult.success && statsResult.stats) {
@@ -84,162 +84,201 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-yellow-600" />
+      <div className="min-h-screen bg-cream-100 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-gold-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-cream-100 text-gray-900 font-sans-serif">
       {/* TOP BAR */}
-      <div className="bg-white/5 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="font-serif text-3xl tracking-wider">INSPIRE ADMIN</h1>
-          <button 
-            onClick={handleLogout} 
-            className="flex items-center gap-2 text-yellow-600 hover:text-white transition"
+      <div className="bg-white border-b border-gray-200/50 sticky top-0 z-30 shadow-soft">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-6 flex justify-between items-center">
+          <div className="flex flex-col">
+            <h1 className="font-serif text-3xl tracking-tight text-gray-900 leading-none">Admin Dashboard</h1>
+            <span className="text-[10px] tracking-[0.4em] text-gold-600 uppercase font-bold mt-2">Management Console</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-gray-400 hover:text-gray-900 transition text-xs tracking-widest font-bold uppercase"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
             Logout
           </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white/5 rounded-lg p-6 border border-white/10 hover:border-yellow-600 transition cursor-pointer">
-            <div className="flex items-center justify-between mb-4">
-              <TrendingUp className="w-10 h-10 text-yellow-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {/* Revenue Card */}
+          <div className="bg-white p-8 border border-gray-100 shadow-soft hover:shadow-premium transition-all">
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-12 h-12 bg-gold-50 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-gold-600" />
+              </div>
               {stats.todayRevenue > 0 && (
-                <span className="text-green-400 text-sm">Active</span>
+                <span className="text-green-500 text-[10px] font-bold tracking-widest uppercase bg-green-50 px-2 py-1">Active</span>
               )}
             </div>
-            <p className="text-white/70 text-sm">Today's Revenue</p>
-            <p className="text-3xl font-bold text-yellow-600">
+            <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">Today's Revenue</p>
+            <p className="text-4xl font-serif text-gray-900">
               ₦{stats.todayRevenue.toLocaleString()}
             </p>
           </div>
 
-          <div 
+          {/* Pending Orders Card */}
+          <div
             onClick={() => navigate('/adminorders')}
-            className="bg-white/5 rounded-lg p-6 border border-white/10 hover:border-yellow-600 transition cursor-pointer"
+            className="bg-white p-8 border border-gray-100 shadow-soft hover:shadow-premium transition-all cursor-pointer group"
           >
-            <Package className="w-10 h-10 text-yellow-600 mb-4" />
-            <p className="text-white/70 text-sm">Pending Orders</p>
-            <p className="text-3xl font-bold">{stats.pendingOrders}</p>
+            <div className="w-12 h-12 bg-gray-50 flex items-center justify-center mb-6 group-hover:bg-gold-50 transition-colors">
+              <Package className="w-6 h-6 text-gray-400 group-hover:text-gold-600 transition-colors" />
+            </div>
+            <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">Pending Orders</p>
+            <p className="text-4xl font-serif text-gray-900">{stats.pendingOrders}</p>
             {stats.pendingOrders > 0 && (
-              <p className="text-xs text-yellow-600 mt-2">→ View Orders</p>
+              <p className="text-[10px] text-gold-600 mt-4 tracking-widest font-bold italic">→ VIEW ORDERS</p>
             )}
           </div>
 
-          <div 
+          {/* Request Card */}
+          <div
             onClick={() => navigate('/adminrequests')}
-            className="bg-white/5 rounded-lg p-6 border border-white/10 hover:border-yellow-600 transition cursor-pointer"
+            className="bg-white p-8 border border-gray-100 shadow-soft hover:shadow-premium transition-all cursor-pointer group"
           >
-            <Sparkles className="w-10 h-10 text-yellow-600 mb-4" />
-            <p className="text-white/70 text-sm">Personalization Requests</p>
-            <p className="text-3xl font-bold">{stats.newRequests}</p>
+            <div className="w-12 h-12 bg-gray-50 flex items-center justify-center mb-6 group-hover:bg-gold-50 transition-colors">
+              <Sparkles className="w-6 h-6 text-gray-400 group-hover:text-gold-600 transition-colors" />
+            </div>
+            <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">New Requests</p>
+            <p className="text-4xl font-serif text-gray-900">{stats.newRequests}</p>
             {stats.newRequests > 0 && (
-              <p className="text-xs text-yellow-600 mt-2">→ View Requests</p>
+              <p className="text-[10px] text-gold-600 mt-4 tracking-widest font-bold italic">→ VIEW REQUESTS</p>
             )}
           </div>
 
-          <div 
+          {/* Low Stock Card */}
+          <div
             onClick={() => navigate('/adminproducts')}
-            className="bg-white/5 rounded-lg p-6 border border-white/10 hover:border-yellow-600 transition cursor-pointer"
+            className="bg-white p-8 border border-gray-100 shadow-soft hover:shadow-premium transition-all cursor-pointer group"
           >
-            <ShoppingBag className="w-10 h-10 text-yellow-600 mb-4" />
-            <p className="text-white/70 text-sm">Low Stock Items</p>
-            <p className={`text-3xl font-bold ${stats.lowStockItems > 0 ? 'text-red-400' : 'text-green-400'}`}>
+            <div className={`w-12 h-12 flex items-center justify-center mb-6 ${stats.lowStockItems > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+              <ShoppingBag className={`w-6 h-6 ${stats.lowStockItems > 0 ? 'text-red-500' : 'text-green-500'}`} />
+            </div>
+            <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">Low Stock Items</p>
+            <p className={`text-4xl font-serif ${stats.lowStockItems > 0 ? 'text-red-500' : 'text-gray-900'}`}>
               {stats.lowStockItems}
             </p>
             {stats.lowStockItems > 0 && (
-              <p className="text-xs text-red-400 mt-2">⚠ Restock needed</p>
+              <p className="text-[10px] text-red-500 mt-4 tracking-widest font-bold italic">⚠ RESTOCK NEEDED</p>
             )}
           </div>
         </div>
 
-        {/* CHART */}
-        <div className="bg-white/5 rounded-lg p-6 border border-white/10 mb-12">
-          <h2 className="text-2xl font-bold mb-6">Revenue Last 7 Days</h2>
-          {revenueData.every(d => d.revenue === 0) ? (
-            <div className="h-[300px] flex items-center justify-center text-gray-500">
-              <p>No sales data yet. Start by adding products and taking orders!</p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Revenue Chart - Wide */}
+          <div className="lg:col-span-8 bg-white p-10 border border-gray-100 shadow-soft">
+            <div className="flex justify-between items-center mb-10">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-serif text-gray-900 tracking-tight">Sales Analytics</h2>
+                <p className="text-xs text-gray-400 uppercase tracking-widest">Revenue Performance (7 Days)</p>
+              </div>
             </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="day" stroke="#888" />
-                <YAxis stroke="#888" />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#111', border: '1px solid #444' }}
-                  formatter={(value: number) => `₦${value.toLocaleString()}`}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#EAB308" 
-                  strokeWidth={4} 
-                  dot={{ fill: '#EAB308', r: 6 }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
 
-        {/* QUICK ACTIONS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <button 
-            onClick={() => navigate('/adminproducts')}
-            className="bg-yellow-600 text-black p-8 rounded-lg hover:bg-white transition text-left group"
-          >
-            <ShoppingBag className="w-10 h-10 mb-4 group-hover:scale-110 transition" />
-            <h3 className="text-2xl font-bold mb-2">Add New Product</h3>
-            <p className="text-black/80">Launch new items in 60 seconds</p>
-          </button>
-          
-          <button 
-            onClick={() => navigate('/adminorders')}
-            className="bg-white/10 p-8 rounded-lg hover:bg-white/20 transition text-left border border-white/20 group"
-          >
-            <Package className="w-10 h-10 mb-4 group-hover:scale-110 transition text-yellow-600" />
-            <h3 className="text-2xl font-bold mb-2">View Orders</h3>
-            <p className="text-white/80">
-              {stats.pendingOrders > 0 
-                ? `${stats.pendingOrders} pending → pack now` 
-                : 'All orders managed ✓'}
-            </p>
-          </button>
-          
-          <button 
-            onClick={() => navigate('/adminrequests')}
-            className="bg-white/10 p-8 rounded-lg hover:bg-white/20 transition text-left border border-white/20 group"
-          >
-            <Sparkles className="w-10 h-10 mb-4 group-hover:scale-110 transition text-yellow-600" />
-            <h3 className="text-2xl font-bold mb-2">Personalization</h3>
-            <p className="text-white/80">
-              {stats.newRequests > 0 
-                ? `${stats.newRequests} new requests waiting` 
-                : 'All requests handled ✓'}
-            </p>
-          </button>
-        </div>
+            {revenueData.every(d => d.revenue === 0) ? (
+              <div className="h-[400px] flex items-center justify-center text-gray-300 italic font-serif">
+                <p>Awaiting your first store interactions...</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#999', fontSize: 11, fontWeight: 600 }}
+                    dy={10}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#999', fontSize: 11, fontWeight: 600 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      backdropFilter: 'blur(5px)',
+                      border: 'none',
+                      boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)',
+                      borderRadius: '0px'
+                    }}
+                    labelStyle={{ fontFamily: 'Playfair Display', fontWeight: 'bold', color: '#111' }}
+                    formatter={(value: number) => [`₦${value.toLocaleString()}`, "Revenue"]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#D4AF37"
+                    strokeWidth={4}
+                    dot={{ fill: '#D4AF37', r: 6, strokeWidth: 0 }}
+                    activeDot={{ r: 8, strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
 
-        {/* Welcome Message for Empty Dashboard */}
-        {stats.pendingOrders === 0 && stats.newRequests === 0 && stats.lowStockItems === 0 && (
-          <div className="mt-12 text-center bg-white/5 border border-white/10 rounded-lg p-12">
-            <h3 className="text-2xl font-bold mb-4">🎉 Welcome to INSPIRE Admin!</h3>
-            <p className="text-gray-400 mb-6">
-              Your dashboard is ready. Start by adding products to your store.
-            </p>
-            <button 
+          {/* Quick Actions - Sidebar style */}
+          <div className="lg:col-span-4 space-y-6">
+            <h3 className="text-xs tracking-[0.3em] font-bold text-gray-400 uppercase mb-4 px-2">Quick Actions</h3>
+
+            <button
               onClick={() => navigate('/adminproducts')}
-              className="bg-yellow-600 text-black px-8 py-4 rounded-full font-bold hover:bg-yellow-500 transition"
+              className="w-full bg-gray-900 text-white p-8 text-left hover:bg-gold-600 transition-all shadow-soft group"
             >
-              Add Your First Product
+              <ShoppingBag className="w-8 h-8 mb-6 text-gold-400 group-hover:scale-110 transition-transform" />
+              <h4 className="text-xl font-serif mb-2">Inventory</h4>
+              <p className="text-xs text-gray-400 font-sans-serif leading-relaxed">Add new pieces or restock collections.</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/adminorders')}
+              className="w-full bg-white p-8 text-left border border-gray-100 hover:border-gold-200 transition-all shadow-soft group"
+            >
+              <Package className="w-8 h-8 mb-6 text-gold-600 group-hover:scale-110 transition-transform" />
+              <h4 className="text-xl font-serif mb-2 text-gray-900">Orders Flow</h4>
+              <p className="text-xs text-gray-500 font-sans-serif leading-relaxed">
+                {stats.pendingOrders > 0
+                  ? `Maintain momentum: ${stats.pendingOrders} pending.`
+                  : 'Your fulfillment queue is clear.'}
+              </p>
+            </button>
+
+            <button
+              onClick={() => navigate('/adminrequests')}
+              className="w-full bg-white p-8 text-left border border-gray-100 hover:border-gold-200 transition-all shadow-soft group"
+            >
+              <Sparkles className="w-8 h-8 mb-6 text-gold-600 group-hover:scale-110 transition-transform" />
+              <h4 className="text-xl font-serif mb-2 text-gray-900">Crafting Inquiries</h4>
+              <p className="text-xs text-gray-500 font-sans-serif leading-relaxed">Review personalization details from clients.</p>
+            </button>
+          </div>
+        </div>
+
+        {/* Empty State Welcome */}
+        {stats.pendingOrders === 0 && stats.newRequests === 0 && stats.lowStockItems === 0 && (
+          <div className="mt-20 text-center py-20 bg-white border border-gray-50 shadow-soft">
+            <h3 className="text-4xl font-serif text-gray-900 mb-6 tracking-tight">Elegance in Every Detail.</h3>
+            <p className="text-gray-400 max-w-sm mx-auto mb-10 font-sans-serif text-sm leading-relaxed">
+              Your dashboard is looking tranquil. This is a perfect moment to curate your next collection.
+            </p>
+            <button
+              onClick={() => navigate('/adminproducts')}
+              className="px-10 py-5 bg-gray-900 text-white text-[10px] tracking-[0.3em] font-bold uppercase hover:bg-gold-600 transition-all shadow-premium"
+            >
+              Create New Product
             </button>
           </div>
         )}

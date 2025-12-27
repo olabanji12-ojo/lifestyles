@@ -1,7 +1,7 @@
 // src/pages/ProductDetail.tsx
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Heart, Share2, Minus, Plus, ShoppingCart, Check, Loader2, ShoppingBag } from 'lucide-react';
+import { Heart, Share2, Minus, Plus, Check, Loader2, ShoppingBag } from 'lucide-react';
 import { getProductById, getProducts, Product } from '../firebase/helpers';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
@@ -28,25 +28,25 @@ export default function ProductDetail() {
 
   const fetchProduct = async () => {
     setLoading(true);
-    
+
     // Fetch product by ID
     const result = await getProductById(id!);
-    
+
     if (result.success && result.product) {
       setProduct(result.product);
-      
+
       // If product has variants, select first by default
       if (result.product.hasVariants && result.product.variants && result.product.variants.length > 0) {
         setSelectedVariant(result.product.variants[0].size);
       }
-      
+
       // Fetch related products (same category)
       await fetchRelatedProducts(result.product.category);
     } else {
       toast.error('Product not found');
       navigate('/shop');
     }
-    
+
     setLoading(false);
   };
 
@@ -99,7 +99,7 @@ export default function ProductDetail() {
   // Add to cart handler
   const handleAddToCart = async () => {
     if (!product) return;
-    
+
     if (isOutOfStock()) {
       toast.error('This product is out of stock');
       return;
@@ -115,23 +115,23 @@ export default function ProductDetail() {
 
     try {
       const variant = getCurrentVariant();
-      
-     await addToCart({
-  productId: product.id!,
-  name: product.name,
-  price: product.price || 0,
-  quantity,
-  image: product.images[0] || '',
-  variant: variant ? {
-    size: variant.size,
-    price: variant.price,
-  } : null,  // ← Use null instead of undefined
-  stock: getCurrentStock(),
-});
+
+      await addToCart({
+        productId: product.id!,
+        name: product.name,
+        price: product.price || 0,
+        quantity,
+        image: product.images[0] || '',
+        variant: variant ? {
+          size: variant.size,
+          price: variant.price,
+        } : null,  // ← Use null instead of undefined
+        stock: getCurrentStock(),
+      });
 
       // Reset quantity after adding
       setQuantity(1);
-      
+
       // Show success state briefly
       setTimeout(() => setIsAddingToCart(false), 1500);
     } catch (error) {
@@ -185,50 +185,49 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-gray-800 pt-20">
-      <div className="max-w-screen-xl mx-auto px-6 sm:px-10 py-12">
+    <div className="min-h-screen bg-cream-100 text-gray-900 pt-24 font-sans-serif">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-8" aria-label="Breadcrumb">
-          <Link to="/" className="hover:text-yellow-600 transition-colors">Home</Link>
-          <span className="mx-2">/</span>
-          <Link to="/shop" className="hover:text-yellow-600 transition-colors">Shop</Link>
-          <span className="mx-2">/</span>
-          <Link to={`/shop?category=${product.category}`} className="hover:text-yellow-600 transition-colors">
+        <nav className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 mb-12 flex items-center gap-2" aria-label="Breadcrumb">
+          <Link to="/" className="hover:text-gold-600 transition-colors">Archive</Link>
+          <span className="text-gray-200">/</span>
+          <Link to="/shop" className="hover:text-gold-600 transition-colors">Shop</Link>
+          <span className="text-gray-200">/</span>
+          <Link to={`/shop?category=${product.category}`} className="hover:text-gold-600 transition-colors">
             {product.category}
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-gray-800">{product.name}</span>
+          <span className="text-gray-200">/</span>
+          <span className="text-gray-900">{product.name}</span>
         </nav>
 
         {/* Product Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-32">
           {/* Images */}
-          <div>
-            <div className="aspect-square bg-white rounded-lg overflow-hidden mb-4 shadow-sm">
-              {product.images && product.images[selectedImage] ? (
+          <div className="space-y-6">
+            <div className="aspect-[4/5] bg-white border border-gray-100 shadow-soft overflow-hidden group">
+              {product.images?.[selectedImage] ? (
                 <img
                   src={product.images[selectedImage]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <ShoppingBag className="w-24 h-24 text-gray-400" />
+                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  <ShoppingBag className="w-24 h-24 text-gray-200" />
                 </div>
               )}
             </div>
 
             {product.images && product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-6">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === index
-                        ? 'border-yellow-600'
-                        : 'border-transparent hover:border-gray-300'
-                    }`}
+                    className={`aspect-square border transition-all ${selectedImage === index
+                      ? 'border-gold-600 p-1'
+                      : 'border-transparent hover:border-gray-200'
+                      }`}
                   >
                     <img
                       src={image}
@@ -242,209 +241,168 @@ export default function ProductDetail() {
           </div>
 
           {/* Product Info */}
-          <div>
-            <h1 className="text-4xl sm:text-5xl text-gray-900 font-light mb-4">
-              {product.name}
-            </h1>
+          <div className="flex flex-col">
+            <div className="mb-12">
+              <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-4 block">Archival Piece</span>
+              <h1 className="text-6xl font-serif text-gray-900 tracking-tight leading-tight mb-6">
+                {product.name}
+              </h1>
+              <div className="flex items-center gap-6">
+                <p className="text-4xl font-serif italic text-gray-900">
+                  ₦{getCurrentPrice().toLocaleString()}
+                </p>
+                {isOutOfStock() ? (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-rose-500 bg-rose-50 px-3 py-1">Exhausted</span>
+                ) : (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1">In Stock</span>
+                )}
+              </div>
+            </div>
 
-            <p className="text-3xl text-yellow-600 font-bold mb-6">
-              ₦{getCurrentPrice().toLocaleString()}
-            </p>
-
-            {/* Stock Status */}
-            {isOutOfStock() ? (
-              <p className="text-red-500 font-semibold mb-4">Out of Stock</p>
-            ) : getCurrentStock() < 5 ? (
-              <p className="text-orange-500 font-semibold mb-4">
-                Only {getCurrentStock()} left in stock!
-              </p>
-            ) : (
-              <p className="text-green-600 font-semibold mb-4">In Stock</p>
-            )}
-
-            <p className="text-gray-700 leading-relaxed mb-6">
+            <p className="text-gray-600 leading-relaxed font-sans-serif mb-12 text-lg italic">
               {product.description}
             </p>
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2 mb-8">
-              <span className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-800 text-xs tracking-wider rounded">
-                {product.category}
-              </span>
-              {product.functions?.map((fn) => (
-                <span
-                  key={fn}
-                  className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-800 text-xs tracking-wider rounded"
-                >
-                  {fn}
-                </span>
-              ))}
-              {product.colors?.map((color) => (
-                <span
-                  key={color}
-                  className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-800 text-xs tracking-wider rounded"
-                >
-                  {color}
-                </span>
-              ))}
-            </div>
-
-            {/* Variant Selector (if applicable) */}
+            {/* Variant Selector */}
             {product.hasVariants && product.variants && product.variants.length > 0 && (
-              <div className="mb-6">
-                <label className="block text-gray-800 text-sm tracking-wider mb-3">
-                  Select Size:
+              <div className="mb-12">
+                <label className="block text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 mb-6 font-bold">
+                  Select Dimension:
                 </label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   {product.variants.map((variant) => (
                     <button
                       key={variant.size}
                       onClick={() => {
                         setSelectedVariant(variant.size);
-                        setQuantity(1); // Reset quantity when changing variant
+                        setQuantity(1);
                       }}
                       disabled={variant.stock === 0}
-                      className={`px-6 py-3 border-2 rounded transition-all ${
-                        selectedVariant === variant.size
-                          ? 'border-yellow-600 bg-yellow-600 text-black font-bold'
-                          : variant.stock === 0
-                          ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'border-gray-300 hover:border-yellow-600'
-                      }`}
+                      className={`px-8 py-4 border text-[10px] font-bold tracking-widest uppercase transition-all ${selectedVariant === variant.size
+                        ? 'bg-gray-900 text-white border-gray-900 shadow-premium'
+                        : variant.stock === 0
+                          ? 'border-gray-100 text-gray-300 cursor-not-allowed italic'
+                          : 'border-gray-200 hover:border-gold-600 text-gray-600'
+                        }`}
                     >
                       {variant.size}
-                      {variant.stock === 0 && (
-                        <span className="block text-xs mt-1">Out of stock</span>
-                      )}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-gray-800 text-sm tracking-wider">Quantity:</span>
-              <div className="flex items-center gap-3 bg-gray-100 border border-gray-300 rounded">
+            {/* Quantity & Actions */}
+            <div className="space-y-8 mt-auto">
+              <div className="flex items-center gap-8 py-8 border-y border-gray-100">
+                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400">Quantity</span>
+                <div className="flex items-center gap-6">
+                  <button
+                    onClick={decreaseQuantity}
+                    className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  >
+                    <Minus className="w-4 h-4 text-gray-400" />
+                  </button>
+                  <span className="text-xl font-serif text-gray-900 w-8 text-center border-b border-gray-100">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={increaseQuantity}
+                    className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={decreaseQuantity}
-                  className="p-3 hover:bg-gray-200 transition-colors"
-                  aria-label="Decrease quantity"
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart || isOutOfStock()}
+                  className={`flex-1 py-6 text-[10px] font-bold tracking-[0.4em] uppercase transition-all flex items-center justify-center gap-4 ${isOutOfStock()
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : isAddingToCart
+                      ? 'bg-gold-600 text-white shadow-premium'
+                      : 'bg-gray-900 text-white hover:bg-gold-600 shadow-premium'
+                    }`}
                 >
-                  <Minus className="w-4 h-4 text-gray-800" />
+                  {isOutOfStock() ? 'Exhausted' : isAddingToCart ? (
+                    <><Check className="w-5 h-5" /> Secured in Cart</>
+                  ) : (
+                    <><ShoppingBag className="w-5 h-5" /> Acquire Selection</>
+                  )}
                 </button>
-                <span className="text-gray-900 font-semibold min-w-[2rem] text-center">
-                  {quantity}
-                </span>
+
                 <button
-                  onClick={increaseQuantity}
-                  className="p-3 hover:bg-gray-200 transition-colors"
-                  aria-label="Increase quantity"
-                  disabled={isOutOfStock()}
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className={`px-8 py-6 border transition-all flex items-center justify-center ${isFavorite
+                    ? 'bg-rose-50 border-rose-100 text-rose-500'
+                    : 'border-gray-100 text-gray-400 hover:border-gold-600'
+                    }`}
                 >
-                  <Plus className="w-4 h-4 text-gray-800" />
+                  <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="px-8 py-6 border border-gray-100 text-gray-400 hover:border-gold-600 transition-all flex items-center justify-center"
+                >
+                  <Share2 className="w-5 h-5" />
                 </button>
               </div>
-            </div>
-
-            {/* Add to Cart */}
-            <button
-              onClick={handleAddToCart}
-              disabled={isAddingToCart || isOutOfStock()}
-              className={`w-full py-4 text-sm tracking-[0.2em] font-bold rounded transition-all mb-4 flex items-center justify-center gap-3 ${
-                isOutOfStock()
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : isAddingToCart
-                  ? 'bg-green-600 text-white'
-                  : 'bg-yellow-600 text-gray-900 hover:bg-yellow-500'
-              }`}
-            >
-              {isOutOfStock() ? (
-                <>OUT OF STOCK</>
-              ) : isAddingToCart ? (
-                <>
-                  <Check className="w-5 h-5" />
-                  ADDED TO CART
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-5 h-5" />
-                  ADD TO CART
-                </>
-              )}
-            </button>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`flex-1 py-3 border rounded transition-all flex items-center justify-center gap-2 ${
-                  isFavorite
-                    ? 'bg-yellow-600 text-gray-900 border-yellow-600'
-                    : 'bg-white text-gray-800 border-gray-300 hover:border-yellow-600'
-                }`}
-              >
-                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                {isFavorite ? 'SAVED' : 'SAVE'}
-              </button>
-              <button
-                onClick={handleShare}
-                className="flex-1 py-3 bg-white text-gray-800 border border-gray-300 rounded hover:border-yellow-600 transition-all flex items-center justify-center gap-2"
-              >
-                <Share2 className="w-5 h-5" />
-                SHARE
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Product Description */}
-        <section className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-3xl text-gray-900 font-semibold mb-6">
-            About This Product
-          </h2>
-          <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p>{product.description}</p>
+        {/* Product Narrative */}
+        <section className="max-w-4xl mx-auto mb-32 border-t border-gray-100 pt-20">
+          <div className="flex flex-col items-center text-center">
+            <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-3 block">Archival Protocol</span>
+            <h2 className="text-4xl font-serif text-gray-900 tracking-tight mb-10">Care & Provenance</h2>
+            <div className="space-y-8 text-gray-600 leading-relaxed text-lg font-sans-serif italic">
+              <p>{product.description}</p>
+              <p>Crafted with the utmost attention to detail, each piece in the INSPIRE collective is a testament to timeless design and quality. We recommend gentle handling to preserve the archival integrity of your acquisition.</p>
+            </div>
           </div>
         </section>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section>
-            <h2 className="text-3xl text-gray-900 font-semibold mb-8 text-center">
-              You Might Also Like
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {relatedProducts.map((relatedProduct) => (
+          <section className="border-t border-gray-100 pt-20">
+            <div className="flex flex-col items-center text-center mb-16">
+              <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-3 block">Catalogue</span>
+              <h2 className="text-4xl font-serif text-gray-900 tracking-tight">Complementary Masterpieces</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+              {relatedProducts.map((p) => (
                 <Link
-                  key={relatedProduct.id}
-                  to={`/product/${relatedProduct.id}`}
-                  className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all"
+                  key={p.id}
+                  to={`/product/${p.id}`}
+                  className="group"
                 >
-                  <div className="aspect-square overflow-hidden">
-                    {relatedProduct.images && relatedProduct.images[0] ? (
+                  <div className="aspect-[3/4] overflow-hidden bg-white border border-gray-50 mb-6">
+                    {p.images?.[0] ? (
                       <img
-                        src={relatedProduct.images[0]}
-                        alt={relatedProduct.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        src={p.images[0]}
+                        alt={p.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                        <ShoppingBag className="w-16 h-16 text-gray-400" />
+                      <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                        <ShoppingBag className="w-12 h-12 text-gray-100" />
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <h3
-                      className="text-gray-900 text-lg mb-2 group-hover:text-yellow-600 transition-colors"
-                      style={{ fontFamily: 'Dancing Script, cursive' }}
-                    >
-                      {relatedProduct.name}
+                  <div>
+                    <span className="text-[10px] text-gold-600 font-bold uppercase tracking-widest mb-1 block">{p.category}</span>
+                    <h3 className="text-2xl font-serif text-gray-900 mb-2 group-hover:text-gold-600 transition-colors">
+                      {p.name}
                     </h3>
-                    <p className="text-yellow-600 font-bold">
-                      {relatedProduct.hasVariants && relatedProduct.variants
-                        ? `From ₦${Math.min(...relatedProduct.variants.map(v => v.price)).toLocaleString()}`
-                        : `₦${(relatedProduct.price || 0).toLocaleString()}`
+                    <p className="text-sm font-bold uppercase tracking-widest text-gray-400">
+                      ₦{p.hasVariants && p.variants
+                        ? Math.min(...p.variants.map(v => v.price)).toLocaleString()
+                        : (p.price || 0).toLocaleString()
                       }
                     </p>
                   </div>

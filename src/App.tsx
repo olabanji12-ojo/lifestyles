@@ -55,7 +55,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Router>
-          <div className="relative">
+          <div className="relative grain min-h-screen bg-white">
             {/* Navigation */}
             <Navigation
               mobileMenuOpen={mobileMenuOpen}

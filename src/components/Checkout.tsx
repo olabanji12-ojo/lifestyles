@@ -299,195 +299,185 @@ export default function Checkout() {
   // END OF GUEST CHECKOUT CHANGE 5
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] pt-20">
+    <div className="min-h-screen bg-cream-100 text-gray-900 pt-24 font-sans-serif">
       <div className="max-w-screen-xl mx-auto px-6 sm:px-10 py-12">
         {/* Header */}
-        <div className="text-center mb-12" data-aos="fade-down">
-          <Link to="/" className="inline-block mb-8">
-            <h1 className="font-serif text-3xl tracking-[0.2em] text-gray-900">INSPIRE</h1>
-          </Link>
-          <h2 className="text-4xl sm:text-5xl text-gray-900 font-light mb-8">Checkout</h2>
+        <div className="text-center mb-16" data-aos="fade-down">
+          <div className="mb-8">
+            <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-4 block">Finalization</span>
+            <h1 className="text-6xl font-serif text-gray-900 tracking-tight">Checkout</h1>
+          </div>
 
           {/* Progress Steps */}
-          <div className="flex justify-center items-center gap-4 max-w-md mx-auto">
+          <div className="flex justify-center items-center gap-6 max-w-lg mx-auto">
             {/* Step 1 */}
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${currentStep >= 1 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-3 transition-colors ${currentStep >= 1 ? 'bg-gold-600 text-white' : 'bg-gray-100 text-gray-400'
                 }`}>
-                {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
+                {currentStep > 1 ? <Check className="w-4 h-4" /> : <span className="text-[10px] font-bold">01</span>}
               </div>
-              <span className="text-xs text-gray-500">Shipping</span>
+              <span className="text-[8px] uppercase tracking-[0.2em] font-bold text-gray-400">Logistics</span>
             </div>
 
-            <div className={`h-0.5 w-16 ${currentStep >= 2 ? 'bg-yellow-600' : 'bg-gray-300'}`} />
+            <div className={`h-px w-20 ${currentStep >= 2 ? 'bg-gold-600' : 'bg-gray-200'}`} />
 
             {/* Step 2 */}
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${currentStep >= 2 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-3 transition-colors ${currentStep >= 2 ? 'bg-gold-600 text-white' : 'bg-gray-100 text-gray-400'
                 }`}>
-                {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
+                {currentStep > 2 ? <Check className="w-4 h-4" /> : <span className="text-[10px] font-bold">02</span>}
               </div>
-              <span className="text-xs text-gray-500">Payment</span>
+              <span className="text-[8px] uppercase tracking-[0.2em] font-bold text-gray-400">Settlement</span>
             </div>
 
-            <div className={`h-0.5 w-16 ${currentStep >= 3 ? 'bg-yellow-600' : 'bg-gray-300'}`} />
+            <div className={`h-px w-20 ${currentStep >= 3 ? 'bg-gold-600' : 'bg-gray-200'}`} />
 
             {/* Step 3 */}
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${currentStep >= 3 ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-400'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-3 transition-colors ${currentStep >= 3 ? 'bg-gold-600 text-white' : 'bg-gray-100 text-gray-400'
                 }`}>
-                3
+                <span className="text-[10px] font-bold">03</span>
               </div>
-              <span className="text-xs text-gray-500">Complete</span>
+              <span className="text-[8px] uppercase tracking-[0.2em] font-bold text-gray-400">Confirmation</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           {/* Left: Forms */}
           <div className="lg:col-span-2">
             {currentStep === 1 && (
-              <form onSubmit={handleContinueToPayment} className="space-y-8" data-aos="fade-right">
-                {/* Error Summary Banner (omitted for brevity) */}
+              <form onSubmit={handleContinueToPayment} className="space-y-12" data-aos="fade-right">
                 {Object.keys(errors).length > 0 && (
-                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded" role="alert">
+                  <div className="bg-rose-50 border border-rose-100 p-6" role="alert">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="h-5 w-5 text-rose-400" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-bold text-red-800">
-                          {Object.keys(errors).length} field{Object.keys(errors).length !== 1 ? 's' : ''} need{Object.keys(errors).length === 1 ? 's' : ''} your attention
+                      <div className="ml-4">
+                        <h3 className="text-[10px] uppercase tracking-widest font-bold text-rose-800">
+                          Attention Required
                         </h3>
-                        <div className="mt-2 text-sm text-red-700">
-                          <ul className="list-disc list-inside space-y-1">
-                            {Object.entries(errors).map(([field, message]) => (
-                              <li key={field}>{message}</li>
-                            ))}
-                          </ul>
+                        <div className="mt-2 text-xs text-rose-700 font-sans-serif italic">
+                          <p>Please review the missing acquisition details below.</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Shipping Address (omitted for brevity) */}
-                <div className="bg-white shadow-md rounded-lg p-6">
-                  <h3 className="text-gray-900 text-xl font-semibold mb-6">Shipping Address</h3>
+                <div className="bg-white border border-gray-50 shadow-premium p-10">
+                  <h3 className="text-2xl font-serif text-gray-900 mb-10 border-b border-gray-50 pb-6">Delivery Directive</h3>
 
-                  {/* Contact Info (omitted for brevity) */}
-                  <div className="mb-6">
-                    <h4 className="text-gray-900 text-sm font-semibold mb-4">Contact Information</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="mb-12">
+                    <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gold-600 mb-8">Identity & Contact</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                       <div>
-                        <label htmlFor="email" className="block text-gray-700 text-sm mb-2">
-                          Email Address *
+                        <label htmlFor="email" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                          Email Protocol
                         </label>
                         <input
                           type="email"
                           id="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className={`w-full bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                          className={`w-full bg-gray-50 border ${errors.email ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                           required
                         />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                       </div>
                       <div>
-                        <label htmlFor="phone" className="block text-gray-700 text-sm mb-2">
-                          Phone Number *
+                        <label htmlFor="phone" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                          Contact Number
                         </label>
                         <input
                           type="tel"
                           id="phone"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className={`w-full bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                          className={`w-full bg-gray-50 border ${errors.phone ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                           required
                         />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                       </div>
                     </div>
                   </div>
 
-                  {/* Delivery Address (omitted for brevity) */}
                   <div>
-                    <h4 className="text-gray-900 text-sm font-semibold mb-4">Delivery Address</h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gold-600 mb-8">Physical Destination</h4>
+                    <div className="space-y-8">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                         <div>
-                          <label htmlFor="firstName" className="block text-gray-700 text-sm mb-2">
-                            First Name *
+                          <label htmlFor="firstName" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                            Given Name
                           </label>
                           <input
                             type="text"
                             id="firstName"
                             value={formData.firstName}
                             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                            className={`w-full bg-white border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            className={`w-full bg-gray-50 border ${errors.firstName ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="lastName" className="block text-gray-700 text-sm mb-2">
-                            Last Name *
+                          <label htmlFor="lastName" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                            Surname
                           </label>
                           <input
                             type="text"
                             id="lastName"
                             value={formData.lastName}
                             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                            className={`w-full bg-white border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            className={`w-full bg-gray-50 border ${errors.lastName ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                             required
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label htmlFor="streetAddress" className="block text-gray-700 text-sm mb-2">
-                          Street Address *
+                        <label htmlFor="streetAddress" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                          Street Nomenclature
                         </label>
                         <input
                           type="text"
                           id="streetAddress"
                           value={formData.streetAddress}
                           onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
-                          className={`w-full bg-white border ${errors.streetAddress ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                          className={`w-full bg-gray-50 border ${errors.streetAddress ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                           required
                         />
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label htmlFor="city" className="block text-gray-700 text-sm mb-2">
-                            City *
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                        <div className="sm:col-span-1">
+                          <label htmlFor="city" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                            City
                           </label>
                           <input
                             type="text"
                             id="city"
                             value={formData.city}
                             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                            className={`w-full bg-white border ${errors.city ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            className={`w-full bg-gray-50 border ${errors.city ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="state" className="block text-gray-700 text-sm mb-2">
-                            State *
+                          <label htmlFor="state" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
+                            Province / State
                           </label>
                           <input
                             type="text"
                             id="state"
                             value={formData.state}
                             onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                            className={`w-full bg-white border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded px-4 py-3 text-gray-900`}
+                            className={`w-full bg-gray-50 border ${errors.state ? 'border-rose-400' : 'border-gray-100'} px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors`}
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="postalCode" className="block text-gray-700 text-sm mb-2">
+                          <label htmlFor="postalCode" className="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-3">
                             Postal Code
                           </label>
                           <input
@@ -495,7 +485,7 @@ export default function Checkout() {
                             id="postalCode"
                             value={formData.postalCode}
                             onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                            className="w-full bg-white border border-gray-300 rounded px-4 py-3 text-gray-900"
+                            className="w-full bg-gray-50 border border-gray-100 px-6 py-4 text-sm text-gray-900 focus:outline-none focus:border-gold-600 transition-colors"
                           />
                         </div>
                       </div>
@@ -504,9 +494,9 @@ export default function Checkout() {
 
                   <button
                     type="submit"
-                    className="w-full bg-yellow-600 text-black py-4 text-sm tracking-wider font-bold rounded hover:bg-yellow-500 transition-colors mt-6"
+                    className="w-full bg-gray-900 text-white py-6 text-[10px] font-bold tracking-[0.4em] uppercase hover:bg-gold-600 transition-all shadow-premium mt-12"
                   >
-                    CONTINUE TO PAYMENT →
+                    Proceed to Settlement →
                   </button>
                 </div>
               </form>
@@ -515,92 +505,97 @@ export default function Checkout() {
             {/* Payment Step */}
             {currentStep === 2 && (
               <div className="space-y-8" data-aos="fade-right">
-                <div className="bg-white shadow-md rounded-lg p-6">
-                  <h3 className="text-gray-900 text-xl font-semibold mb-6">Payment Method</h3>
-                  <p className="text-gray-500 mb-6">
-                    Complete your purchase securely with Paystack
+                <div className="bg-white border border-gray-50 shadow-premium p-10">
+                  <h3 className="text-2xl font-serif text-gray-900 mb-10 border-b border-gray-50 pb-6">Payment Authorization</h3>
+                  <p className="text-gray-500 italic font-sans-serif mb-10 leading-relaxed">
+                    Finalize your acquisition via our secure settlement gateway. All data is encrypted and handled with absolute discretion.
                   </p>
 
                   <button
                     onClick={handlePayment}
                     disabled={processingPayment}
-                    className="w-full bg-yellow-600 text-black py-4 text-sm tracking-wider font-bold rounded hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-gray-900 text-white py-6 text-[10px] font-bold tracking-[0.4em] uppercase hover:bg-gold-600 transition-all shadow-premium disabled:bg-gray-100 disabled:text-gray-400 flex items-center justify-center gap-4"
                   >
                     {processingPayment ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        PROCESSING...
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Authorizing...
                       </>
                     ) : (
-                      // UPDATED: Payment button reflects the new orderTotal (which is just the subtotal)
-                      <>PAY ₦{orderTotal.toLocaleString()}</>
+                      <>Authorize ₦{orderTotal.toLocaleString()}</>
                     )}
                   </button>
 
-                  <p className="text-gray-400 text-xs text-center mt-4">
-                    🔒 Secure payment powered by Paystack
-                  </p>
+                  <div className="mt-12 text-center">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-300 flex items-center justify-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span> Verified Secure Settlement Channel
+                    </p>
+                  </div>
 
                   <button
                     onClick={() => setCurrentStep(1)}
-                    className="w-full mt-4 text-gray-600 hover:text-yellow-600 transition"
+                    className="w-full mt-8 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gold-600 transition-colors"
                   >
-                    ← Back to Shipping
+                    ← Amend Directive
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Processing Step (omitted for brevity) */}
+            {/* Processing Step */}
             {currentStep === 3 && (
-              <div className="text-center py-12" data-aos="zoom-in">
-                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                  <Check className="w-10 h-10 text-white" />
+              <div className="text-center py-24 bg-white border border-gray-50 shadow-premium" data-aos="zoom-in">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+                  <Check className="w-8 h-8 text-emerald-500" />
                 </div>
-                <h3 className="text-3xl text-gray-900 mb-4">Verifying Payment...</h3>
-                <p className="text-gray-500">Please wait while we confirm your order</p>
-                <Loader2 className="w-8 h-8 animate-spin text-yellow-600 mx-auto mt-6" />
+                <h3 className="text-4xl font-serif text-gray-900 mb-6">Verification in Progress</h3>
+                <p className="text-gray-500 italic font-sans-serif">Synchronizing with the secure clearance protocol...</p>
+                <div className="mt-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-gold-600 mx-auto" />
+                </div>
               </div>
             )}
           </div>
 
           {/* Right: Order Summary */}
           <div className="lg:col-span-1" data-aos="fade-left">
-            <div className="bg-white shadow-md rounded-lg p-6 sticky top-24">
-              <h3 className="text-gray-900 text-xl font-semibold mb-6">Order Summary</h3>
+            <div className="bg-white border border-gray-50 shadow-premium p-10 sticky top-32">
+              <h3 className="text-2xl font-serif text-gray-900 mb-10 border-b border-gray-100 pb-6">Archive Summary</h3>
 
-              <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+              <div className="space-y-8 mb-10 max-h-96 overflow-y-auto pr-4 scrollbar-thin">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                        <ShoppingBag className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="text-gray-900 text-sm font-medium mb-1">{item.name}</p>
-                      {item.variant && (
-                        <p className="text-gray-500 text-xs">Size: {item.variant.size}</p>
+                  <div key={item.id} className="flex gap-6 group">
+                    <div className="w-16 h-16 flex-shrink-0 border border-gray-50 overflow-hidden">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      ) : (
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                          <ShoppingBag className="w-6 h-6 text-gray-200" />
+                        </div>
                       )}
-                      <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
                     </div>
-                    <p className="text-gray-900 font-semibold">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-900 text-sm font-serif line-clamp-1">{item.name}</p>
+                      {item.variant && (
+                        <p className="text-[8px] uppercase tracking-widest font-bold text-gold-600 mt-1">{item.variant.size}</p>
+                      )}
+                      <p className="text-[8px] uppercase tracking-widest font-bold text-gray-400 mt-0.5">Quantity: {item.quantity}</p>
+                    </div>
+                    <p className="text-sm font-serif italic text-gray-900">
                       ₦{getItemTotal(item).toLocaleString()}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-gray-200 pt-4 space-y-3">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
-                  <span>₦{subtotal.toLocaleString()}</span>
+              <div className="border-t border-gray-50 pt-8 space-y-4">
+                <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold text-gray-400">
+                  <span>Subtotal Value</span>
+                  <span className="font-serif normal-case tracking-normal text-lg text-gray-900 font-normal">₦{subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-gray-900 text-xl font-bold pt-3 border-t border-gray-200">
-                  <span>Order Total</span>
-                  <span className="text-yellow-600">₦{orderTotal.toLocaleString()}</span>
+                <div className="flex justify-between items-center text-gray-900 py-6 border-t border-gray-50 mt-6">
+                  <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Aggregate</span>
+                  <span className="text-3xl font-serif italic text-gold-600">₦{orderTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>

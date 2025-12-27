@@ -11,147 +11,123 @@ const navLinks = [
   { label: 'ABOUT US', href: '/about' },
 ];
 
-const GOLD_COLOR = 'gold-500'; // Custom gold color
+const GOLD_COLOR_TOKEN = 'gold-600';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage('');
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    setMessage('Thank you for subscribing!');
     setEmail('');
     setIsSubmitting(false);
   };
 
   return (
-    // 🛑 CHANGE: Footer background changed from bg-black to bg-gray-900
-    <footer className="bg-gray-900 text-white pt-24 pb-16 px-6 mt-0" role="contentinfo">
-      <div className="max-w-screen-lg mx-auto">
-        <h2
-          className={`font-handwritten text-6xl sm:text-7xl tracking-normal text-${GOLD_COLOR} text-center mb-10`}
-          data-aos="fade-down"
-          data-aos-duration="1000"
-        >
-          Inspire
-        </h2>
+    <footer className="bg-gray-900 text-white pt-32 pb-16 px-6 mt-0" role="contentinfo">
+      <div className="max-w-screen-xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24 mb-24">
 
-        <nav aria-label="Footer navigation">
-          <ul
-            className="flex flex-wrap justify-center gap-8 sm:gap-12 my-12"
-            data-aos="fade-up"
-            data-aos-delay="200"
-            data-aos-duration="800"
-          >
-            {navLinks.map((link, index) => (
-              <li
-                key={link.label}
-                data-aos="fade-up"
-                data-aos-delay={300 + (index * 100)}
+          {/* Brand Manifesto */}
+          <div className="space-y-8" data-aos="fade-up">
+            <h2 className="text-4xl font-serif tracking-tight text-white mb-4">INSPIRE</h2>
+            <p className="text-[10px] text-gray-500 font-sans-serif leading-relaxed uppercase tracking-[0.2em]">
+              The Archive <br />
+              <span className="text-gray-700">Artisanal Curation since 2012.</span>
+            </p>
+            <p className="text-xs text-gray-400 font-sans-serif italic leading-relaxed max-w-xs">
+              "We believe in the quiet power of objects and the narratives they carry. Our collections are a tribute to the artisanal spirit."
+            </p>
+          </div>
+
+          {/* Navigation: The Archive */}
+          <div className="space-y-8" data-aos="fade-up" data-aos-delay="100">
+            <h3 className="text-[10px] tracking-[0.4em] font-bold uppercase text-gold-600">The Archive</h3>
+            <nav aria-label="Footer navigation">
+              <ul className="space-y-5">
+                {navLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="text-[10px] tracking-[0.3em] font-bold uppercase text-white hover:text-gold-600 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+
+          {/* Inquiries & Legal */}
+          <div className="space-y-8" data-aos="fade-up" data-aos-delay="200">
+            <h3 className="text-[10px] tracking-[0.4em] font-bold uppercase text-gold-600">Inquiries</h3>
+            <ul className="space-y-5">
+              <li><Link to="/contact" className="text-[10px] tracking-[0.3em] font-bold uppercase text-white hover:text-gold-600 transition-colors">Contact Us</Link></li>
+              <li><Link to="/shipping" className="text-[10px] tracking-[0.3em] font-bold uppercase text-white hover:text-gold-600 transition-colors">Shipping & Returns</Link></li>
+              <li><Link to="/privacy" className="text-[10px] tracking-[0.3em] font-bold uppercase text-white hover:text-gold-600 transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="text-[10px] tracking-[0.3em] font-bold uppercase text-white hover:text-gold-600 transition-colors">Terms of Service</Link></li>
+            </ul>
+          </div>
+
+          {/* Subscription */}
+          <div className="space-y-8" data-aos="fade-up" data-aos-delay="300">
+            <h3 className="text-[10px] tracking-[0.4em] font-bold uppercase text-gold-600">Journal</h3>
+            <p className="text-xs text-gray-400 font-sans-serif italic leading-relaxed">
+              Subscribe to the Archive Journal for exclusive acquisition opportunities.
+            </p>
+            <form onSubmit={handleSubmit} className="relative mt-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ENTER YOUR PROTOCOL"
+                required
+                className="w-full bg-transparent border-b border-gray-700 py-4 text-[10px] tracking-[0.2em] font-bold text-white placeholder-gray-500 focus:outline-none focus:border-gold-600 transition-colors"
+                disabled={isSubmitting}
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="absolute right-0 bottom-4 text-gold-600 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
               >
-                <Link
-                  to={link.href}
-                  className={`text-xs tracking-[0.15em] text-gray-400 hover:text-${GOLD_COLOR} transition-colors focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR} rounded px-2 py-1`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col sm:flex-row justify-center items-center gap-0 my-14 max-w-md mx-auto"
-          aria-label="Newsletter subscription"
-          data-aos="zoom-in"
-          data-aos-delay="400"
-          data-aos-duration="800"
-        >
-          <label htmlFor="newsletter-email" className="sr-only">
-            Email address
-          </label>
-          <input
-            id="newsletter-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="ENTER YOUR EMAIL"
-            required
-            className={`w-full sm:w-auto bg-transparent border border-${GOLD_COLOR} sm:border-r-0 px-6 py-4 text-sm tracking-[0.1em] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR}`}
-            disabled={isSubmitting}
-          />
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            // Button still uses gold and text-black for high contrast
-            className={`w-full sm:w-auto bg-${GOLD_COLOR} text-black px-8 py-4 text-xs tracking-[0.15em] font-bold hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-${GOLD_COLOR} focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50`}
-          >
-            {isSubmitting ? 'SUBSCRIBING...' : 'SUBSCRIBE'}
-          </button>
-        </form>
-
-        {message && (
-          <p className="text-center text-green-400 text-sm mb-6" role="status">
-            {message}
-          </p>
-        )}
-
-        <div
-          className="flex justify-center gap-8 my-12"
-          role="navigation"
-          aria-label="Social media"
-          data-aos="fade-up"
-          data-aos-delay="600"
-        >
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 rounded"
-            aria-label="Follow us on Instagram"
-            data-aos="zoom-in"
-            data-aos-delay="700"
-          >
-            <Instagram className={`w-6 h-6 text-${GOLD_COLOR} hover:text-white transition-colors`} />
-          </a>
-          <a
-            href="https://facebook.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 rounded"
-            aria-label="Follow us on Facebook"
-            data-aos="zoom-in"
-            data-aos-delay="800"
-          >
-            <Facebook className={`w-6 h-6 text-${GOLD_COLOR} hover:text-white transition-colors`} />
-          </a>
-          <a
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 rounded"
-            aria-label="Follow us on Twitter"
-            data-aos="zoom-in"
-            data-aos-delay="900"
-          >
-            <Twitter className={`w-6 h-6 text-${GOLD_COLOR} hover:text-white transition-colors`} />
-          </a>
+                {isSubmitting ? '...' : 'Enroll'}
+              </button>
+            </form>
+            <div className="flex gap-6 pt-6">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold-600 transition-colors">
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold-600 transition-colors">
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold-600 transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
         </div>
 
-        <p
-          className="text-center text-xs tracking-[0.1em] text-gray-600 mt-16"
-          data-aos="fade-up"
-          data-aos-delay="1000"
-        >
-          © 2025 INSPIRE. ALL RIGHTS RESERVED.
-        </p>
+        {/* Global Footer Bottom */}
+        <div className="border-t border-gray-800 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+            <p className="text-[8px] tracking-[0.5em] font-bold text-gray-700 uppercase">
+              © 2024 INSPIRE ARCHIVE.
+            </p>
+            <p className="text-[8px] tracking-[0.5em] font-bold text-gray-700 uppercase">
+              LAGOS / WORLDWIDE
+            </p>
+          </div>
+          <div className="flex items-center gap-8">
+            <span className="text-[8px] tracking-[0.5em] font-bold text-gray-700 uppercase">All Rights Reserved</span>
+            <div className="w-8 h-px bg-gray-800" />
+            <span className="text-[8px] tracking-[0.5em] font-bold text-gold-900/40 uppercase tracking-tighter">ESTD 2012</span>
+          </div>
+        </div>
       </div>
     </footer>
   );

@@ -78,129 +78,94 @@ export default function Login() {
 
   return (
     <section
-      className="min-h-screen bg-[#FAF8F5] flex items-center justify-center px-4 py-12"
-      data-aos="fade-in"
-      data-aos-duration="800"
+      className="min-h-screen bg-cream-100 flex items-center justify-center px-4 py-12 font-sans-serif"
     >
       <div
-        className="max-w-md w-full bg-white rounded-lg shadow-md p-8"
+        className="max-w-md w-full bg-white shadow-premium p-10 lg:p-14 border border-gray-50"
         data-aos="fade-up"
-        data-aos-delay="100"
-        data-aos-duration="800"
       >
-        <h2
-          className="text-3xl font-serif font-bold text-[#3E3E3E] text-center mb-6"
-          data-aos="fade-up"
-          data-aos-delay="200"
-        >
-          Welcome Back
-        </h2>
-        <p
-          className="text-center text-[#3E3E3E] mb-8"
-          data-aos="fade-up"
-          data-aos-delay="300"
-        >
-          Log in to your INSPIRE account
-        </p>
+        <div className="text-center mb-12">
+          <span className="text-[10px] tracking-[0.5em] text-gold-600 font-bold uppercase mb-4 block">Identity Verification</span>
+          <h2 className="text-5xl font-serif text-gray-900 tracking-tight">Access Archives</h2>
+          <p className="text-xs text-gray-400 mt-4 leading-relaxed italic uppercase tracking-widest">Entering the world of INSPIRE</p>
+        </div>
 
         {error && (
-          <p
-            className="text-red-500 text-center mb-4"
-            data-aos="fade-up"
-            data-aos-delay="350"
-          >
+          <div className="bg-rose-50 border-l-2 border-rose-400 p-4 mb-8 text-rose-600 text-xs font-bold uppercase tracking-widest">
             {error}
-          </p>
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div data-aos="fade-right" data-aos-delay="400">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-[#3E3E3E] mb-2"
-            >
-              Email Address
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div>
+            <label htmlFor="email" className="block text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 mb-3">Email Address</label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F4C430] transition-colors"
-              placeholder="Enter your email"
+              className="w-full bg-gray-50 border-transparent border-b border-gray-100 px-0 py-4 focus:bg-white focus:border-gold-600 focus:outline-none transition-all text-sm tracking-wide"
+              placeholder="curator@inspire.com"
               required
             />
           </div>
 
-          <div data-aos="fade-right" data-aos-delay="500">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-[#3E3E3E] mb-2"
-            >
-              Password
-            </label>
+          <div>
+            <label htmlFor="password" title="Enter Password" className="block text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 mb-3">Secret Key</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F4C430] transition-colors"
-              placeholder="Enter your password"
+              className="w-full bg-gray-50 border-transparent border-b border-gray-100 px-0 py-4 focus:bg-white focus:border-gold-600 focus:outline-none transition-all text-sm tracking-wide"
+              placeholder="••••••••"
               required
             />
           </div>
-           <div className="text-right mb-4">
-            <button 
-              onClick={(e) => { 
-                e.preventDefault(); 
-                alert('Password reset feature coming soon!'); 
-              }} 
-              className="text-[#F4C430] hover:underline"
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => alert('Recovery protocol coming soon!')}
+              className="text-[10px] uppercase tracking-widest font-bold text-gray-400 hover:text-gold-600 transition-colors"
             >
-              Forgot password?
+              Lost Access?
             </button>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-[#F4C430] hover:bg-[#E5B520] text-[#3E3E3E] font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            data-aos="zoom-in"
-            data-aos-delay="600"
+            className="w-full bg-gray-900 text-white py-5 text-[10px] font-bold tracking-[0.4em] uppercase hover:bg-gold-600 transition-all disabled:opacity-50 shadow-premium"
           >
-            {loading ? 'Logging In...' : 'Log In'}
+            {loading ? 'Verifying...' : 'Authorize Access'}
           </button>
         </form>
 
-        <div
-          className="mt-6 flex flex-col items-center"
-          data-aos="fade-up"
-          data-aos-delay="750"
-        >
-          <p className="text-sm text-gray-600 mb-2">or continue with</p>
+        <div className="mt-12 flex flex-col items-center gap-6">
+          <div className="flex items-center gap-4 w-full">
+            <div className="h-px bg-gray-100 flex-1"></div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Alternative protocol</span>
+            <div className="h-px bg-gray-100 flex-1"></div>
+          </div>
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-3 hover:bg-gray-50 transition-all duration-300"
+            className="w-full flex items-center justify-center gap-4 bg-white border border-gray-100 py-5 hover:bg-gray-50 transition-all shadow-soft"
           >
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google logo"
-              className="w-5 h-5"
+              alt="Google"
+              className="w-5 h-5 opacity-70"
             />
-            <span className="text-[#3E3E3E] font-medium">Sign in with Google</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Sync with Google</span>
           </button>
         </div>
 
-        <p
-          className="text-center text-sm text-[#3E3E3E] mt-6"
-          data-aos="fade-up"
-          data-aos-delay="700"
-        >
-          Don't have an account?{' '}
-          <Link to="/signup" className="text-[#F4C430] hover:underline font-medium">
-            Sign Up
+        <p className="text-center text-[10px] text-gray-400 mt-12 uppercase tracking-widest font-bold">
+          New to the collective?{' '}
+          <Link to="/signup" className="text-gold-600 hover:text-gray-900 transition-colors">
+            Initiate Account
           </Link>
         </p>
       </div>
